@@ -1,0 +1,13 @@
+name = "GHESizings"
+uuid = "c69f955c-e283-4c57-b28d-9686908aa4bd"
+authors = ["Gabriel-Dion <dion.gabriel100@gmail.com>"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.11.3"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
