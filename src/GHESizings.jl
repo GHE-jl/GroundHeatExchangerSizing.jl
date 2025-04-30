@@ -21,11 +21,12 @@ includet("QAnalysis.jl")
 
 # From AlternativeSizing
 export alternative_sizing,
-    L2,
-    L3,
-    L4
+    alternative_sizing_L2,
+    alternative_sizing_L3,
+    alternative_sizing_L4
 
 # From QAnalysis
-export Q_analysis
+export Q_analysis,
+    building_to_ground_loads
 
 end

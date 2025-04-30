@@ -9,8 +9,10 @@ struct QLoads
     hr::Vector{Float64}         # Hourly annual heat load profile
     hₗ::Float64                 # Lower annual heat load value
     hₕ::Float64                 # Higher annual heat load value
-    hₘ::Float64                 # Absolute maximal heat load value
-    mₐ::Vector{Float64}         # Average monthly heat load values (12 values)
+    h::Float64                  # Absolute maximal heat load value
+    m̄ₐ::Vector{Float64}         # Average monthly heat load values (12 values)
+    m̄ₗ::Vector{Float64}         # Lower monthly loads (12 values)
+    m̄ₕ::Vector{Float64}         # Higher monthly loads (12 values)
     mₗ::Float64                 # Average monthly heat load when Q.hₗ occurs
     mₕ::Float64                 # Average monthly heat load when Q.hₕ occurs
     y::Float64                  # Yearly average load
@@ -29,7 +31,7 @@ function Q_analysis(Q)
     Ouput:
         - A structure QLoads based on the input vector of heat loads
     """
-    # TODO Validate if it works
+
     # Preallocation
     Qm_ave = Vector{Float64}(undef, 12)
     Qm_c_peak = Vector{Float64}(undef, 12)
@@ -45,18 +47,22 @@ function Q_analysis(Q)
         Qm_c_peak[ii] = minimum(Q[range])
         Qm_h_peak[ii] = maximum(Q[range])
     end
-    # Correction
-    Qm_c_peak[Qm_c_peak .> 0] .= 0
-    Qm_h_peak[Qm_h_peak .< 0] .= 0
 
-    return QLoads(Q, minimum(Q),
+    # Correction
+    Qm_c_peak[Qm_c_peak .> 0] .= 0.
+    Qm_h_peak[Qm_h_peak .< 0] .= 0.
+
+    return QLoads(
+        Q,
+        minimum(Q),
         maximum(Q),
         maximum(abs.(Q)),
         Qm_ave,
-        Qm_ave(Qm_c_peak==minimum(Q)),
-        Qm_ave(Qm_h_peak==maximum(Q)),
+        Qm_c_peak,
+        Qm_h_peak,
+        Qm_ave[Qm_c_peak .== minimum(Q)][1],
+        Qm_ave[Qm_h_peak .== maximum(Q)][1],
         mean(Q))
-        # TODO Validate if it's faster to allocate Qhl = minimum(Q) instead of computing it 2 times.
 end
 
 function building_to_ground_loads(Qb::Vector{T1}, COPh::T2, COPc::T2,
@@ -67,6 +73,7 @@ function building_to_ground_loads(Qb::Vector{T1}, COPh::T2, COPc::T2,
     both heating and cooling) that has to be covered by the geothermal system. The default is 100%
     coverage.
     """
+    #TODO Validate if it works
 
     # Cut the loads to the percentage of peak coverage.
     Qb[Qb .< pc_peakh*minimum(Qb)] .= pc_peakh*minimum(Qb)

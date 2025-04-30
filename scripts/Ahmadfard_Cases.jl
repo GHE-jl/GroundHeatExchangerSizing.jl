@@ -32,7 +32,7 @@ function case_1()
         s = 2073600.0,      # Ground volumetric specific heat
         g = 3.9e6,          # Grout volumetric specific heat
         p = 1.54e6)         # Pipe volumetric specific heat
-    μ = (f = 5.2e-3,)       # Fluid viscosity (Pa·s)
+    μ = 5.2e-3              # Fluid viscosity (Pa·s)
 
     # Thermal properties
     k = (s = 1.8,           # Ground thermal conductivity (W/mK)
@@ -75,7 +75,7 @@ function case_2()
         s = 2.877e6,        # Ground specific heat
         g = 3.9e6,          # Grout specific heat
         p = 1.54e6)         # Pipe specific heat
-    μ = (f = 3.37e-3,)      # Fluid viscosity (Pa·s)
+    μ = 3.37e-3             # Fluid viscosity (Pa·s)
 
     # Thermal properties
     k = (s = 2.25,          # Ground conductivity (W/mK)
@@ -118,7 +118,7 @@ function case_3()
         s = 2.592e6,        # Ground specific heat
         g = 3.9e6,          # Grout specific heat
         p = 1.54e6)         # Pipe specific heat
-    μ = (f = 3.37e-3,)      # Fluid viscosity (Pa·s)
+    μ = 3.37e-3             # Fluid viscosity (Pa·s)
 
     # Thermal properties
     k = (s = 2.25,          # Ground conductivity (W/mK)
@@ -161,7 +161,7 @@ function case_4()
         s = 2.052e6,        # Ground specific heat
         g = 3.9e6,          # Grout specific heat
         p = 1.54e6)         # Pipe specific heat
-    μ = (f = 3.37e-3,)      # Fluid viscosity (Pa·s)
+    μ = 3.37e-3             # Fluid viscosity (Pa·s)
 
     # Thermal properties
     k = (s = 1.9,           # Ground conductivity (W/mK)
