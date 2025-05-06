@@ -18,8 +18,9 @@ function case_1()
 
     # Borehole configuration parameters
     n = (x = 1, y = 1)      # Number of boreholes in x/y axes
-    nb = 1                  # Total number of boreholes
     B = 6.0                 # Borehole spacing (m)
+    xy = B * hcat([[i, j] for i in 1:n.x for j in 1:n.y]...)'.-B # Spacing matrix
+    nb = size(xy, 1)        # Total number of boreholes
     D = 4.0                 # Buried depth (m)
     r = (b = 0.075,         # Borehole radius (m)
         o = 0.0167,         # Outer pipe radius (m)
@@ -49,7 +50,7 @@ function case_1()
     R = (b = 0.13,)         # Borehole thermal resistance (m·K/W)
     V = 0.1*maximum(abs.(Q))/(1000.0*ρ.f) # Total fluid flow rate (m³/s)
     
-    return (; Q, n, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
+    return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
 
 function case_2()
@@ -61,8 +62,9 @@ function case_2()
 
     # Borehole configuration parameters
     n = (x = 12, y = 10)    # Number of boreholes in x/y axes
-    nb = 120                # Total number of boreholes
     B = 6.0                 # Borehole spacing (m)
+    xy = B * hcat([[i, j] for i in 1:n.x for j in 1:n.y]...)'.-B # Spacing matrix
+    nb = size(xy, 1)        # Total number of boreholes
     D = 3.0                 # Buried depth (m)
     r = (b = 0.054,         # Borehole radius (m)
         o = 0.0167,         # Outer pipe radius (m)
@@ -92,7 +94,7 @@ function case_2()
     R = (b = 0.113,)        # Borehole thermal resistance (m·K/W)
     V = 29 / ρ.f * nb       # Total fluid flow rate (m³/s)
 
-    return (; Q, n, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
+    return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
 
 function case_3()
@@ -104,8 +106,9 @@ function case_3()
 
     # Borehole configuration parameters
     n = (x = 7, y = 7)      # Number of boreholes in x/y axes
-    nb = 49                 # Total number of boreholes
     B = 5.0                 # Borehole spacing (m)
+    xy = B * hcat([[i, j] for i in 1:n.x for j in 1:n.y]...)'.-B # Spacing matrix
+    nb = size(xy, 1)        # Total number of boreholes
     D = 2.5                 # Buried depth (m)
     r = (b = 0.075,         # Borehole radius (m)
         o = 0.0167,         # Outer pipe radius (m)
@@ -135,7 +138,7 @@ function case_3()
     R = (b = 0.1,)           # Borehole thermal resistance (m·K/W)
     V = 33.1 / ρ.f * nb      # Total fluid flow rate (m³/s)
 
-    return (; Q, n, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
+    return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
 
 function case_4()
@@ -147,8 +150,9 @@ function case_4()
 
     # Borehole configuration parameters
     n = (x = 5, y = 5)      # Number of boreholes in x/y axes
-    nb = 25                 # Total number of boreholes
     B = 8.0                 # Borehole spacing (m)
+    xy = B * hcat([[i, j] for i in 1:n.x for j in 1:n.y]...)'.-B # Spacing matrix
+    nb = size(xy, 1)        # Total number of boreholes
     D = 4.0                 # Buried depth (m)
     r = (b = 0.075,         # Borehole radius (m)
         o = 0.0167,         # Outer pipe radius (m)
@@ -178,7 +182,7 @@ function case_4()
     R = (b = 0.2,)          # Borehole thermal resistance (m·K/W)
     V = 0.074*maximum(abs.(Q))/(1000*ρ.f) # Total fluid flow rate (m³/s)
     
-    return (; Q, n, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
+    return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
 
 function loads_case_1()

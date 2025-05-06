@@ -26,7 +26,9 @@ export alternative_sizing,
     alternative_sizing_L4
 
 # From QAnalysis
-export Q_analysis,
+export QLoads,
+    Q_analysis,
+    Q_L3_resample
     building_to_ground_loads
 
 end
