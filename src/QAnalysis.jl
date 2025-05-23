@@ -116,24 +116,3 @@ function Q_L3_resample(Q::Matrix{A}, t_peak::A, n_year) where A<:Real
 
     return Q
 end
-
-function building_to_ground_loads(Qb::Vector{T1}, COPh::T2, COPc::T2,
-        pc_peakh = 1, pc_peakc = 1) where {T1 <: Real, T2 <: Real}
-    """
-    Converts building loads to ground loads, as a function of COP for both heating (COPh) and 
-    cooling (COPc). Option inputs can be used to specify the percentage (pc) of the peak loads (for
-    both heating and cooling) that has to be covered by the geothermal system. The default is 100%
-    coverage.
-    """
-    #TODO Validate if it works
-
-    # Cut the loads to the percentage of peak coverage.
-    Qb[Qb .< pc_peakh * minimum(Qb)] .= pc_peakh * minimum(Qb)
-    Qb[Qb .> pc_peakc * maximum(Qb)] .= pc_peakc * maximum(Qb)
-
-    # Convert building loads (Qb) to ground loads (Qg)
-    Qgh = Qb[Qb .<= 0] * (1 - (1 / COPh))
-    Qgc = Qb[Qb .> 0] * (1 + (1 / COPc))
-    Qg = Qgh + Qgc
-    return Qg
-end

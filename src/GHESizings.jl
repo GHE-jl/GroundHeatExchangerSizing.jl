@@ -14,10 +14,9 @@ Julia version: 1.11.3
 """
 
 module GHESizings
-using Revise
 
-includet("AlternativeSizing.jl")
-includet("QAnalysis.jl")
+include("AlternativeSizing.jl")
+include("QAnalysis.jl")
 
 # From AlternativeSizing
 export alternative_sizing,
@@ -29,6 +28,5 @@ export alternative_sizing,
 export QLoads,
     Q_analysis,
     Q_L3_resample
-    building_to_ground_loads
 
 end

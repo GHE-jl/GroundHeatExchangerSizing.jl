@@ -1,7 +1,8 @@
-#using .GHEModels
+include("../../GHEModels.jl/src/GHEModels.jl")
+using .GHEModels
 
 function alternative_sizing(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D, Rb::A, xy::Matrix{A},
-        T, method = "all", t_peak = nothing, n_year = nothing) where {A <: Real}
+        T, method = "all", t_peak = nothing, n_year = nothing) where A <: Real
     """
     alternative_sizing(Q, ks, Cs, rb, D, Rb, xy, T, method, t_peak, n_year)
 
@@ -73,7 +74,7 @@ function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     """
     # 0. Set optional Inputs
     isnothing(t_peak) ? t_peak = 6.0 : t_peak
-    isnothing(n_year) ? n_year = 10.0 : n_year
+    isnothing(n_year) ? n_year = 10.0 : Float64(n_year)
 
     # 1. Define time array
     t = (y = n_year * 365 * 24 * 3600.0,
@@ -102,8 +103,8 @@ function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
         push!(Hᵢ, Li / size(xy, 1))
 
         # Iteration output
-        println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
-                string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
+        #println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
+        #        string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
         ii += 1
     end
     return Hᵢ[end]
@@ -145,8 +146,8 @@ function alternative_sizing_L3(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
         push!(Hᵢ, Li / size(xy, 1))
 
         # Iteration output
-        println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
-                string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
+        #println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
+        #        string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
         ii += 1
     end
     return Hᵢ[end]
@@ -155,7 +156,7 @@ end
 function alternative_sizing_L4(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, xy::Matrix{A},
     T, n_year = nothing) where {A <: Real}
     """
-    alternative_sizing_L4(Q₀, ks, Cs, rb, D, Rb, xy, T; n_year=10)
+    alternative_sizing_L4(Q₀, ks, Cs, rb, D, Rb, xy, T)
 
     Function that performs a hourly (L4) sizing equation based on the alternative sizing equation.
     """
@@ -186,8 +187,8 @@ function alternative_sizing_L4(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D::A, Rb::A
         push!(Hᵢ, Li / size(xy, 1))
 
         # Iteration output
-        println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
-                string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
+        #println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
+        #        string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
         ii += 1
     end
     return Hᵢ[end]
