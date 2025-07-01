@@ -2,7 +2,7 @@ include("../../GHEModels.jl/src/GHEModels.jl")
 using .GHEModels
 
 function alternative_sizing(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D, Rb::A, xy::Matrix{A},
-        T, method = "all", t_peak = nothing, n_year = nothing) where A <: Real
+        T, method = "all", t_peak = 6., n_year = 10.) where A <: Real
     """
     alternative_sizing(Q, ks, Cs, rb, D, Rb, xy, T, method, t_peak, n_year)
 
@@ -34,9 +34,9 @@ function alternative_sizing(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D, Rb::A, xy::
         Exchanger Sizing Tools Including an Inter-Model Comparison.” Renewable and Sustainable 
         Energy Reviews 110:247–65. doi: 10.1016/j.rser.2019.04.045.
     """
-    # Set optional Inputs
-    isnothing(t_peak) ? t_peak = 6.0 : t_peak
-    isnothing(n_year) ? n_year = 10.0 : n_year
+    # 0. Check optional input
+    isa(t_peak, Float64) ? t_peak : Float64(n_year)
+    isa(n_year, Float64) ? n_year : Float64(n_year)
 
     # Analyse the ground load for the method
     Q = Q_analysis(Q₀)
@@ -63,7 +63,7 @@ function alternative_sizing(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D, Rb::A, xy::
 end
 
 function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, xy::Matrix{A},
-        T, t_peak = nothing, n_year = nothing) where {A <: Real}
+        T, t_peak = 6., n_year = 10.) where {A <: Real}
     """
         alternative_sizing_L2(Q, ks, Cs, rb, D, Rb, xy, T, t_peak=6.0, n_year=10)
 
@@ -72,9 +72,9 @@ function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     the second column for ground heating load. The first row is yearly mean, the second row is the
     monthly average load when the peak load occurs, and the third row is the maximum load.
     """
-    # 0. Set optional Inputs
-    isnothing(t_peak) ? t_peak = 6.0 : t_peak
-    isnothing(n_year) ? n_year = 10.0 : Float64(n_year)
+    # 0. Check optional input
+    isa(t_peak, Float64) ? t_peak : Float64(n_year)
+    isa(n_year, Float64) ? n_year : Float64(n_year)
 
     # 1. Define time array
     t = (y = n_year * 365 * 24 * 3600.0,
@@ -111,7 +111,7 @@ function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
 end
 
 function alternative_sizing_L3(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, xy::Matrix{A},
-    T, t_peak = nothing, n_year = nothing) where {A <: Real}
+    T, t_peak = 6., n_year = 10.) where {A <: Real}
     """
     alternative_sizing_L3(Q, ks, Cs, rb, D, Rb, xy, T; t_peak=6.0, n_year=10)
 
@@ -119,9 +119,9 @@ function alternative_sizing_L3(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     The hear load variable Q is a matrix (12x3) formed of [Q.m̄ₐ, Q.m̄ₗ, Q.m̄ₕ] from the QLoads 
     structure, meaning the average monthly loads and the minimum and maximum laods.
     """
-    # 0. Set optional Inputs
-    isnothing(t_peak) ? t_peak = 6.0 : t_peak
-    isnothing(n_year) ? n_year = 10.0 : n_year
+    # 0. Check optional input
+    isa(t_peak, Float64) ? t_peak : Float64(n_year)
+    isa(n_year, Float64) ? n_year : Float64(n_year)
 
     # 1. Define time array
     t = collect(3600.0:3600.0:(3600.0 * 24 * 365 * n_year))
@@ -152,16 +152,16 @@ function alternative_sizing_L3(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     end
     return Hᵢ[end]
 end
-
+ 
 function alternative_sizing_L4(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, xy::Matrix{A},
-    T, n_year = nothing) where {A <: Real}
+    T, n_year = 10.) where {A <: Real}
     """
     alternative_sizing_L4(Q₀, ks, Cs, rb, D, Rb, xy, T)
 
     Function that performs a hourly (L4) sizing equation based on the alternative sizing equation.
     """
-    # 0. Set optional Inputs
-    isnothing(n_year) ? n_year = 10.0 : n_year
+    # 0. Check optional input
+    isa(n_year, Float64) ? n_year : Float64(n_year)
 
     # 1. Define time array
     t = collect(3600.0:3600.0:(3600.0 * 24 * 365 * n_year))
