@@ -1,10 +1,10 @@
 include("../../GHEModels.jl/src/GHEModels.jl")
 using .GHEModels
 
-function alternative_sizing(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D, Rb::A, xy::Matrix{A},
-        T, method = "all", t_peak = 6., n_year = 10.) where A <: Real
+function alternative_sizing(Q₀::Vector{F}, ks::F, Cs::F, rb::F, D, Rb::F, xy::Matrix{F},
+        T, method = "all", t_peak = 6.0, n_year = 10.0) where {F <: AbstractFloat}
     """
-    alternative_sizing(Q, ks, Cs, rb, D, Rb, xy, T, method, t_peak, n_year)
+        alternative_sizing(Q, ks, Cs, rb, D, Rb, xy, T, method, t_peak, n_year)
 
     Function that performs the alternative ASHRAE sizing equation to size a ground heat exchanger
     (GHE) for either an L2 (three pulse), L3 (monthly loads) or L4 (hourly loads) approach
@@ -34,6 +34,7 @@ function alternative_sizing(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D, Rb::A, xy::
         Exchanger Sizing Tools Including an Inter-Model Comparison.” Renewable and Sustainable 
         Energy Reviews 110:247–65. doi: 10.1016/j.rser.2019.04.045.
     """
+    #TODO: Update this function with the new versions of the L4 below
     # 0. Check optional input
     isa(t_peak, Float64) ? t_peak : Float64(n_year)
     isa(n_year, Float64) ? n_year : Float64(n_year)
@@ -62,8 +63,8 @@ function alternative_sizing(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D, Rb::A, xy::
     return H
 end
 
-function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, xy::Matrix{A},
-        T, t_peak = 6., n_year = 10.) where {A <: Real}
+function alternative_sizing_L2(Q::Matrix{F}, ks::F, Cs::F, rb::F, D::F, Rb::F, xy::Matrix{F},
+        T, t_peak = 6.0, n_year = 10.0) where {F <: AbstractFloat}
     """
         alternative_sizing_L2(Q, ks, Cs, rb, D, Rb, xy, T, t_peak=6.0, n_year=10)
 
@@ -85,6 +86,7 @@ function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     Hᵢ = [0.0, 150.0]
     ii = 2
     Ltmp = Vector{Float64}(undef, 2)
+    nb = size(xy, 1)
 
     while abs(Hᵢ[ii] - Hᵢ[ii - 1]) > 0.01 && ii < 20  # 0.01 m and 20 iterations for convergence
         # Evaluate the g-function
@@ -92,9 +94,9 @@ function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
         #g = successive_flux([t.h, t.m+t.h, t.y+t.m+t.h], k.s, Cs, r.b, Hi(ii), D, xy)*2*pi*k.s*nb;
 
         # Evaluate ground resistances R_gy, R_gm and R_gh
-        Rgy = (g[3] - g[2]) / (2 * π * ks)
-        Rgm = (g[2] - g[1]) / (2 * π * ks)
-        Rgh = g[1] / (2 * pi * ks)
+        Rgy = (g[3] - g[2]) * nb
+        Rgm = (g[2] - g[1]) * nb
+        Rgh = g[1] * nb
 
         # Evaluate sizing length
         Ltmp[1] = ((Q[1, 1] * Rgy) + (Q[2, 1] * Rgm) + (Q[3, 1] * (Rgh + Rb))) / (T.L - T.g)
@@ -110,10 +112,10 @@ function alternative_sizing_L2(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     return Hᵢ[end]
 end
 
-function alternative_sizing_L3(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, xy::Matrix{A},
-    T, t_peak = 6., n_year = 10.) where {A <: Real}
+function alternative_sizing_L3(Q::Matrix{F}, ks::F, Cs::F, rb::F, D::F, Rb::F, xy::Matrix{F},
+    T, t_peak = 6.0, n_year = 10.0) where {F <: AbstractFloat}
     """
-    alternative_sizing_L3(Q, ks, Cs, rb, D, Rb, xy, T; t_peak=6.0, n_year=10)
+    alternative_sizing_L3(Q, ks, Cs, rb, D, Rb, xy, T, t_peak, n_year)
 
     Function that performs a monthly (L3) sizing equation based on the alternative sizing equation.
     The hear load variable Q is a matrix (12x3) formed of [Q.m̄ₐ, Q.m̄ₗ, Q.m̄ₕ] from the QLoads 
@@ -134,14 +136,15 @@ function alternative_sizing_L3(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     Hᵢ = [0.0, 150.0]
     ii = 2
     Ltmp = Vector{Float64}(undef, 2)
+    nb = size(xy, 1)
 
     while abs(Hᵢ[ii] - Hᵢ[ii - 1]) > 0.01 && ii < 20  # 0.01 m and 20 iterations for convergence
         # Evaluate the g-function
         g = bloc_matrix(t, ks, Cs, rb, Hᵢ[ii], D, xy)
 
         # Evaluate sizing length
-        Ltmp[1] = minimum(convolution(f[:, 1], g/(2*π*ks)) + (Q[:, 1] * Rb)) / (T.L - T.g)
-        Ltmp[2] = maximum(convolution(f[:, 2], g/(2*π*ks)) + (Q[:, 2] * Rb)) / (T.H - T.g)
+        Ltmp[1] = minimum(convolution(f[:, 1], g * nb) + (Q[:, 1] * Rb)) / (T.L - T.g)
+        Ltmp[2] = maximum(convolution(f[:, 2], g * nb) + (Q[:, 2] * Rb)) / (T.H - T.g)
         Li = maximum(Ltmp)
         push!(Hᵢ, Li / size(xy, 1))
 
@@ -152,43 +155,57 @@ function alternative_sizing_L3(Q::Matrix{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, x
     end
     return Hᵢ[end]
 end
- 
-function alternative_sizing_L4(Q₀::Vector{A}, ks::A, Cs::A, rb::A, D::A, Rb::A, xy::Matrix{A},
-    T, n_year = 10.) where {A <: Real}
+
+function alternative_sizing_L4(Q₀::Vector{F}, V::F, ks::F, kg::F, kp::F, kf::F, Cs::F, rb::F, ro::F,
+    ri::F, s::F, D::F, cf::F, ρf::F, μf::F, xy::Matrix{F}, T, n_year = 10.0
+    ) where {F <: AbstractFloat}
     """
-    alternative_sizing_L4(Q₀, ks, Cs, rb, D, Rb, xy, T)
+    alternative_sizing_L4(Q₀, V, ks, kg, kp, kf, Cs, rb, ro, ri, s, D, cf, ρf, μf, xy, T, n_year)
 
     Function that performs a hourly (L4) sizing equation based on the alternative sizing equation.
+    This is the prefered method since it uses the effective borehole thermal resistance
     """
     # 0. Check optional input
     isa(n_year, Float64) ? n_year : Float64(n_year)
 
     # 1. Define time array
-    t = collect(3600.0:3600.0:(3600.0 * 24 * 365 * n_year))
+    t = 3600.0:3600.0:(3600.0 * 24 * 365 * n_year)
 
-    # 2. Iterate to find borehole length that covers the ground thermal loads
+    # 2. Precompute some values for the thermal resistance
+    Rf = R_f(V / (size(xy, 1) * π * ri^2), kf, ri, cf, ρf, μf)
+    Rp = R_p(kp, ro, ri)
+    Rb = R_b_first_order_multipole(ks, kg, rb, ro, s, Rp, Rf)
+    Ra = R_a_first_order_multipole(ks, kg, rb, ro, s, Rp, Rf)
+    Rbₑ = zero(Float64)
+
+    # 3. Iterate to find borehole length that covers the ground thermal loads
     L_tmp = Vector{Float64}(undef, 2)               # Preallocation
     g = Vector{Float64}(undef, 8760*Int(n_year))    # Preallocation
     tmp = similar(g)                                # Preallocation
     Q = repeat(Q₀, Int(n_year))
     f = diff([0.0; Q])
     Hᵢ = [0.0, 150.0]
+    nb = size(xy, 1)
     ii = 2
 
     while abs(Hᵢ[ii] - Hᵢ[ii - 1]) > 0.01 && ii < 20  # 0.01 m and 20 iterations for convergence
-        # Evaluate the g-function
+        # Evaluate the g-function for impulse in W/m (so in units °Cm/W)
         g = bloc_matrix(t, ks, Cs, rb, Hᵢ[ii], D, xy)
 
+        # Evaluate the effective borehole thermal resistance
+        Rbₑ = R_bₑ(V, cf, ρf, Hᵢ[ii], Rb, Ra)
+
         # Evaluate sizing length
-        tmp = convolution(f, g/(2*π*ks)) .+ (Q * Rb)
+        #tmp = convolution(f, g * 2 * π * ks * size(xy, 1)) .+ (Q * Rbₑ) # Dimensionless g
+        tmp = convolution(f, g * nb) .+ (Q * Rbₑ)    # g in °Cm/W
         L_tmp[1] = minimum(tmp) / (T.L - T.g)
         L_tmp[2] = maximum(tmp) / (T.H - T.g)
         Li = maximum(L_tmp)
         push!(Hᵢ, Li / size(xy, 1))
 
         # Iteration output
-        #println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
-        #        string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
+        println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
+                string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")
         ii += 1
     end
     return Hᵢ[end]

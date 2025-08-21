@@ -44,7 +44,7 @@ function case_1()
     # Temperature parameters
     T = (g = 17.5,          # Initial ground temperature (°C)
         L = 0.0,            # Minimum inlet temperature
-        H = 35.)            # Maximum inlet temperature
+        H = 35.0)            # Maximum inlet temperature
 
     # System configuration
     R = (b = 0.13,)         # Borehole thermal resistance (m·K/W)

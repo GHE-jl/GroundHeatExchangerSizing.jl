@@ -41,7 +41,7 @@ function Q_analysis(Q)
     # Find values through months
     for ii in 1:12
         range = (h_month[ii] + 1):h_month[ii + 1]
-        Qm_ave[ii] = mean(Q[range])
+        Qm_ave[ii] = sum(Q[range]) / length(Q[range])
         Qm_c_peak[ii] = minimum(Q[range])
         Qm_h_peak[ii] = maximum(Q[range])
     end
@@ -60,7 +60,7 @@ function Q_analysis(Q)
         Qm_h_peak,
         Qm_ave[Qm_c_peak .== minimum(Q)][1],
         Qm_ave[Qm_h_peak .== maximum(Q)][1],
-        mean(Q))
+        sum(Q) / length(Q))
 end
 
 function Q_L3_resample(Q::Matrix{A}, t_peak::A, n_year) where A<:Real
