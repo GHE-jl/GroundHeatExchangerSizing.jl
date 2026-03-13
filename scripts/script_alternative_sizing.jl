@@ -1,20 +1,18 @@
 """
-Script performing sizing using the alternative ASHRAE sizing equation.
+Script performing sizing using the alternative ASHRAE sizing equation on the test cases defined in
+Ahmadfard et Bernier (2019).
 """
 
 using BenchmarkTools
 #using CairoMakie
 
-includet("../../GHEModels.jl/src/GHEModels.jl")
+includet("../../GroundHeatExchanger.jl/src/GroundHeatExchanger.jl")
 includet("../src/GHESizings.jl")
-includet("Ahmadfard_Cases.jl")
-using .GHEModels, .GHESizings
+using .GroundHeatExchanger, .GHESizings
 
 # 1. Select case
-#Q₀, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V = case_1()
-#Q₀, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V = case_2()
-#Q₀, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V = case_3()
-Q₀, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V = case_4()
+includet("Ahmadfard_cases.jl")
+Q₀, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V = ahmadfard_cases(4)
 
 Q₀ = Float64.(Q₀)
 
@@ -32,11 +30,11 @@ Rbₑ = R_bₑ(V, C.f / ρ.f, ρ.f, 100.0, Rb, Ra)
 
 # 4. Call the L2 alternative sizing equation
 QL2 = [Q.y Q.y; Q.mₗ Q.mₕ; Q.hₗ Q.hₕ]
-@time H2 = alternative_sizing_L2(QL2, k.s, C.s, r.b, D, Rb, xy, T)
+# @time H2 = alternative_sizing_L2(QL2, k.s, C.s, r.b, D, Rb, xy, T)
 
 # 5. Call the L3 alternative sizing equation
 QL3 = [Q.m̄ₐ Q.m̄ₗ Q.m̄ₕ]
-@time H3 = alternative_sizing_L3(QL3, k.s, C.s, r.b, D, Rb, xy, T)
+# @time H3 = alternative_sizing_L3(QL3, k.s, C.s, r.b, D, Rb, xy, T)
 
 # 6. Call the L4 alternative sizing equation
 @time H4 = alternative_sizing_L4(Q₀, V, k.s, k.g, k.p, k.f, C.s, r.b, r.o, r.i, s, D, C.f / ρ.f, 

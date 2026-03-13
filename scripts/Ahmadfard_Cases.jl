@@ -8,11 +8,16 @@ including an inter-model comparison. Renewable and Sustainable Energy Reviews, 1
 https://doi.org/10.1016/j.rser.2019.04.045
 """
 
-function case_1()
-    """
-        case_1()
-    """
+function ahmadfard_cases(n::Int)
+    fn_name = Symbol("ahmadfard_case_$n")
+    if isdefined(Main, fn_name)
+        return getfield(Main, fn_name)()
+    else
+        error("Dataset case $n not defined. Choose 1-4.")
+    end
+end
 
+function ahmadfard_case_1()
     # Ground hourly heat load
     Q = loads_case_1()  
 
@@ -53,10 +58,7 @@ function case_1()
     return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
 
-function case_2()
-    """
-        case_2()
-    """
+function ahmadfard_case_2()
     # Ground hourly heat load
     Q = loads_case_2()  
 
@@ -97,10 +99,7 @@ function case_2()
     return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
 
-function case_3()
-    """
-        case_3()
-    """
+function ahmadfard_case_3()
     # Ground hourly heat load
     Q = loads_case_3()  
 
@@ -141,10 +140,7 @@ function case_3()
     return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
 
-function case_4()
-    """
-        case_4()
-    """
+function ahmadfard_case_4()
     # Ground hourly heat load
     Q = loads_case_4()  
 
