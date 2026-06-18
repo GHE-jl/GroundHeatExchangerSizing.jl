@@ -9,15 +9,21 @@ includet("alternative_sizing.jl")
 # Functions to perform the borehole outlet sizing method.
 includet("borehole_outlet_sizing.jl")
 # Functions to perform the SCW sizing method.
-includet("scw_sizing.jl")
+includet("standing_column_well_sizing.jl")
 
-# From QAnalysis
+# From thermal_load_analysis.jl
 export QLoads,
     Q_analysis,
     Q_hourly_to_monthly,
     Q_hourly_to_three_pulses,
     Q_monthly_to_hourly,
-    Q_monthly_to_three_pulses
+    Q_monthly_to_three_pulses,
+    Q_cutoff,
+    Q_COP,
+    heat_pump_performance
+
+# From heat_pump.jl
+export heat_pump_performance
 
 # From AlternativeSizing
 export alternative_sizing,

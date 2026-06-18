@@ -104,7 +104,7 @@ model should be based on the finite line source (FLS) model.
         Exchanger Sizing Tools Including an Inter-Model Comparison.” Renewable and Sustainable 
         Energy Reviews 110:247–65. doi: 10.1016/j.rser.2019.04.045.
 """
-function alternative_sizing_L3(Q::Matrix{F}, ks::F, Cs::F, rb::F, D::F, Rb::F, xy::Matrix{F},
+function alternative_sizing_monthly(Q::Matrix{F}, ks::F, Cs::F, rb::F, D::F, Rb::F, xy::Matrix{F},
     T, t_peak = 6.0, n_year = 10.0) where {F <: AbstractFloat}
     # 0. Check optional input
     isa(t_peak, Float64) ? t_peak : Float64(n_year)
@@ -172,7 +172,7 @@ model should be based on the finite line source (FLS) model.
         Exchanger Sizing Tools Including an Inter-Model Comparison.” Renewable and Sustainable 
         Energy Reviews 110:247–65. doi: 10.1016/j.rser.2019.04.045.
 """
-function alternative_sizing_L4(Q₀::AbstractVector{<:Real}, V::Real, ks::Real, kg::Real, kp::Real,
+function alternative_sizing_hourly(Q₀::AbstractVector{<:Real}, V::Real, ks::Real, kg::Real, kp::Real,
     kf::Real, Cs::Real, rb::Real, ro::Real, ri::Real, s::Real, D::Real, cf::Real, ρf::Real, 
     μf::Real, xy::AbstractArray{<:Real}, T, n_year::Real = 10.0)
     # 0. Check optional input
@@ -213,10 +213,6 @@ function alternative_sizing_L4(Q₀::AbstractVector{<:Real}, V::Real, ks::Real, 
         L_tmp[2] = maximum(tmp) / (T.H - T.g)
         Li = maximum(L_tmp)
         push!(Hᵢ, Li / size(xy, 1))
-
-        # Iteration output
-        #=println("H = " * string(round(Hᵢ[ii]; digits = 1)) * " m | tol = " *
-                string(round(abs(Hᵢ[ii + 1] - Hᵢ[ii]); digits = 2)) * " m")=#
         ii += 1
     end
     return Hᵢ[end]

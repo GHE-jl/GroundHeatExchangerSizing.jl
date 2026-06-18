@@ -91,9 +91,9 @@ end
     Q_hourly_to_three_pulses(Q)
 
 Function that resample a hourly thermal load profile to three pulses loads usually used in a
-three pulses sizing equation. The three pulses loads are the yearly average `Qa`, the monthly average
-when the peak load occurs `Qm` and the peak load `Qp`. Both `Qm` and `Qp` are retrieved for cooling
-and heating.
+three pulses sizing equation. The three pulses loads are the yearly average `Qa`, the monthly
+average when the peak load occurs `Qm` and the peak load `Qp`. Both `Qm` and `Qp` are retrieved for
+cooling and heating.
 # Argument
     - `Q`: Ground hourly thermal load profile (8760x1) [W]
 # Output
@@ -181,4 +181,22 @@ function Q_monthly_to_three_pulses(Q::AbstractMatrix{<:Real})
     Qmh = Q[Q[:, 3] .== maximum(Q), 1]
 
     return [Qa Qa; Qmc Qmh; Qc Qh]
+end
+
+"""
+    Q_cutoff(Q, cutoff_heating, cutoff_cooling)
+
+Function that cuts a thermal load profile at a certain value for both heating and cooling based on
+peak values.
+# Arguments
+    - `Q`: Hourly thermal load profile (8760x1) [W]
+    - `cutoff_heating`: Cutoff value of peak heating loads (between 0 and 1)
+    - `cutoff_cooling`: Cutoff value of peak cooling loads (between 0 and 1)
+# Output
+    - Cutoff hourly thermal load profile (8760x1) [W]
+"""
+function Q_cutoff(Q::AbstractVector{<:Real}, cutoff_heating::Real, cutoff_cooling::Real)
+    Q[Q .> 0] .= Q[Q .> 0] .* cutoff_heating
+    Q[Q .< 0] .= Q[Q .< 0] .* cutoff_cooling
+    return Q
 end
