@@ -1,10 +1,6 @@
 # Borehole-outlet transfer-function sizing (Dion & Pasquier 2025) on the Ahmadfard & Bernier (2019)
 # test cases (as adapted in Dion & Pasquier 2025, Table 1). Sizes each case with the L2, L3 and L4
 # levels and compares the lengths with the alternative ASHRAE equation.
-#
-# Run from the package root with the script environment:
-#   julia --project=script -e 'using Pkg; Pkg.instantiate()'
-#   julia --project=script script/script_outlet_sizing.jl
 
 using GroundHeatExchangerSizing
 using CairoMakie
@@ -13,7 +9,7 @@ using BenchmarkTools
 include("Ahmadfard_cases.jl")
 
 levels = (:L2, :L3, :L4)
-cases = 1:4
+cases = 3
 H_out = zeros(length(cases), length(levels))
 H_alt = zeros(length(cases), length(levels))
 
@@ -33,9 +29,7 @@ for (ci, c) in enumerate(cases)
     end
 end
 
-# Outlet sizing time per level (BenchmarkTools), on case 4 (5×5 field). The outlet method solves an
-# optimisation per limit, so it is heavier than the alternative fixed-point; L3/L4 stay tractable
-# because the transfer function is sub-sampled and PCHIP-interpolated (interp = true).
+# Outlet sizing time per level (BenchmarkTools), on case 4 (5×5 field).
 let p = ahmadfard_cases(4)
     Q = Float64.(p.Q); xy = p.xy; V = p.V / p.nb
     rb, D, ks, Cs, s = p.r.b, p.D, p.k.s, p.C.s, p.s
@@ -59,7 +53,4 @@ for (li, lvl) in enumerate(levels)
     barplot!(ax, collect(cases) .+ 0.2, H_out[:, li]; width = 0.4, label = "outlet")
     li == 3 && axislegend(ax; position = :lt)
 end
-
-mkpath(joinpath(@__DIR__, "figures"))
-save(joinpath(@__DIR__, "figures", "outlet_sizing.png"), fig)
-println("Saved figures/outlet_sizing.png")
+display(fig)

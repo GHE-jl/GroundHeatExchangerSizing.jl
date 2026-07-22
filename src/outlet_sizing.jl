@@ -5,36 +5,36 @@
 #
 #     Tout(t) = Tg + Σᵢ (Qᵢ - Qᵢ₋₁)/(V·Cf) · ḡ(t - tᵢ₋₁, H)
 #
-# There is no explicit borehole resistance term; Rb* is carried inside ḡ. Unlike the alternative
-# ASHRAE equation (a fixed-point iteration), the borehole length here is found by optimisation, as in
-# the article and its MATLAB implementation: for each operating limit the length is the minimiser of
-# |Tlim - extremum(Tout)| over H ∈ [50, 250] m (the validity range of the short-term ANN), solved
-# with Optimization.jl (Optim.jl `Fminbox(LBFGS())`, finite-difference gradients). The governing
-# design is the longer of the two per-limit lengths.
+# There is no explicit borehole resistance term, as Rb* is carried inside ḡ. Unlike the alternative
+# ASHRAE equation (a fixed-point iteration), the borehole length here is found by optimisation. For
+# each operating limit the length is the minimiser of |Tlim - extremum(Tout)| over H ∈ [110, 200] m
+# — the H training range of the short-term ANN (`short_term_response` in GroundResponse.jl).
 #
-# The effective borehole resistance Rb* is the first-order multipole value with the mean axial
-# short-circuit correction (`resistance_ULoop_effective`); the solver settings and the Rb* method are
-# fixed by design, not user choices.
+# Ground loads Q are per convention negative for heat extraction (ground cooling, building heating)
+# and positive for heat rejection (ground heating, building cooling).
 #
 # Reference:
-#   - Dion, G., & Pasquier, P. (2025). Ground heat exchanger sizing using borehole outlet transfer
-#     function. Science and Technology for the Built Environment.
-#   - Pasquier, P., Zarrella, A., & Labib, R. (2018). Application of artificial neural networks to
-#     near-instant construction of short-term g-functions. Applied Thermal Engineering, 143, 910-921.
+#   - Dion, G., & and Pasquier, P. (2025). Ground heat exchanger sizing using borehole outlet 
+#       transfer function. Science and Technology for the Built Environment, 31(10), 1–13. 
+#       https://doi.org/10.1080/23744731.2025.2523200
+#   - Pasquier, P., Zarrella, A., & Labib, R. (2018). Application of artificial neural networks to 
+#       near-instant construction of short-term g-functions. Applied Thermal Engineering, 143, 
+#       910–921. https://doi.org/10.1016/j.applthermaleng.2018.07.137
 
 using Optimization, OptimizationOptimJL, FiniteDiff
 
 # Bounded length-optimisation controls (not user choices).
-const _H0 = 100.0           # initial borehole length [m]
-const _H_LB = 50.0          # lower bound [m]
-const _H_UB = 250.0         # upper bound [m] (short-term ANN validity)
+const _H0 = 150.0           # initial borehole length [m] (centre of the ANN H range)
+const _H_LB = 110.0         # lower bound [m] (short-term ANN H validity)
+const _H_UB = 200.0         # upper bound [m] (short-term ANN H validity)
 
 """
     _optimize_length(objective)
 
 Minimise `objective(H)`: the temperature-limit residual `|Tlim - extremum(Tout(H))|` over the
-borehole length `H ∈ [50, 250] m`, with Optimization.jl (`Fminbox(LBFGS())`, finite differences).
-Returns the optimal length [m]. Internal helper shared by the three outlet levels.
+borehole length `H ∈ [110, 200] m` (the short-term ANN H range), with Optimization.jl
+(`Fminbox(LBFGS())`, finite differences). Returns the optimal length [m]. Internal helper shared by
+the three outlet levels.
 """
 function _optimize_length(objective)
     f = OptimizationFunction((u, _) -> objective(u[1]), Optimization.AutoFiniteDiff())
@@ -83,17 +83,23 @@ function outlet_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}
     th = tp * 3600.0
     tsup = [th, tm + th, ty + tm + th]                           # superposition times t1,t2,t3
 
-    # Outlet temperature after the three pulses, for the (Qy, Qm, Qh) of one limit.
-    function Tout_peak(H, Qy, Qm, Qh)
+    # Outlet temperature after the three pulses, optimised against each operating limit in turn.
+    H_low = _optimize_length() do H
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
         ḡ = outlet_transfer_function(tsup, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
             FLSModel(H, D, ks, Cs); xy = xy)
         Γh, Γm, Γy = ḡ[1], ḡ[2] - ḡ[1], ḡ[3] - ḡ[2]
-        return T0 + (Qy * Γy + Qm * Γm + Qh * Γh) / (nb * V * Cf)
+        Tout = T0 + (Q3[1, 1] * Γy + Q3[2, 1] * Γm + Q3[3, 1] * Γh) / (nb * V * Cf)
+        return abs(Tlim[1] - Tout)
     end
-
-    H_low = _optimize_length(H -> abs(Tlim[1] - Tout_peak(H, Q3[1, 1], Q3[2, 1], Q3[3, 1])))
-    H_high = _optimize_length(H -> abs(Tlim[2] - Tout_peak(H, Q3[1, 2], Q3[2, 2], Q3[3, 2])))
+    H_high = _optimize_length() do H
+        Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
+        ḡ = outlet_transfer_function(tsup, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
+            FLSModel(H, D, ks, Cs); xy = xy)
+        Γh, Γm, Γy = ḡ[1], ḡ[2] - ḡ[1], ḡ[3] - ḡ[2]
+        Tout = T0 + (Q3[1, 2] * Γy + Q3[2, 2] * Γm + Q3[3, 2] * Γh) / (nb * V * Cf)
+        return abs(Tlim[2] - Tout)
+    end
     return (H = max(H_low, H_high), H_low = H_low, H_high = H_high)
 end
 
@@ -116,16 +122,22 @@ function _outlet_convolution(Qc::AbstractVector{<:Real}, Qh::AbstractVector{<:Re
     Qc_full = repeat(collect(Float64, Qc), nyi)
     Qh_full = repeat(collect(Float64, Qh), nyi)
 
-    # Hourly outlet temperature for a one-year profile repeated over the design period.
-    function Tout(H, Qfull)
+    # Hourly outlet temperature for a one-year profile repeated over the design period, optimised
+    # against each operating limit in turn.
+    H_low = _optimize_length() do H
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
         ḡ = outlet_transfer_function(t, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
             FLSModel(H, D, ks, Cs); xy = xy, interp = true)
-        return T0 .+ convolution(Qfull ./ (nb * V * Cf), ḡ)
+        Tout = T0 .+ convolution(Qc_full ./ (nb * V * Cf), ḡ)
+        return abs(Tlim[1] - minimum(Tout))
     end
-
-    H_low = _optimize_length(H -> abs(Tlim[1] - minimum(Tout(H, Qc_full))))
-    H_high = _optimize_length(H -> abs(Tlim[2] - maximum(Tout(H, Qh_full))))
+    H_high = _optimize_length() do H
+        Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
+        ḡ = outlet_transfer_function(t, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
+            FLSModel(H, D, ks, Cs); xy = xy, interp = true)
+        Tout = T0 .+ convolution(Qh_full ./ (nb * V * Cf), ḡ)
+        return abs(Tlim[2] - maximum(Tout))
+    end
     return (H = max(H_low, H_high), H_low = H_low, H_high = H_high)
 end
 

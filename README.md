@@ -1,28 +1,31 @@
 # GroundHeatExchangerSizing.jl
 
-A Julia package to **size vertical ground heat exchangers (GHE)** — to find the borehole length
+A Julia package to **size vertical ground heat exchangers (GHE)**. It finds the borehole length
 required to keep the heat-pump fluid temperature within its operating limits while covering the
-ground thermal loads. Two complementary sizing families are provided, each at three levels of
+ground thermal loads. The package provides two sizing families. Each family works at three levels of
 detail (L2 three-pulse, L3 monthly, L4 hourly):
 
-1. **Alternative ASHRAE sizing equation** — the g-function form of Ahmadfard & Bernier (2018, 2019),
-   which removes the temperature-penalty term by evaluating the finite-line-source g-function for
+1. **Alternative ASHRAE sizing equation.** This is the g-function form of Ahmadfard & Bernier (2018,
+   2019). It removes the temperature-penalty term by evaluating the finite-line-source g-function for
    the actual borefield.
-2. **Borehole-outlet transfer-function sizing** — Dion & Pasquier (2025), which replaces the
-   borehole-wall g-function with a dimensionless transfer function defined at the borehole outlet,
-   embedding the fluid residence time, pipe/borehole geometry and effective borehole resistance.
+2. **Borehole-outlet transfer-function sizing.** This is the method of Dion & Pasquier (2025). It
+   replaces the borehole-wall g-function with a dimensionless transfer function defined at the
+   borehole outlet. The transfer function embeds the fluid residence time, the pipe and borehole
+   geometry, and the effective borehole resistance.
 
-`GroundHeatExchangerSizing.jl` is a sizing layer of the GHE-jl ecosystem: its backend is
-[GroundHeatExchanger.jl](https://github.com/GHE-jl/GroundHeatExchanger.jl), which re-exports the
-[GroundResponse.jl](https://github.com/GHE-jl/GroundResponse.jl) ground models and the
-[BoreholeResistance.jl](https://github.com/GHE-jl/BoreholeResistance.jl) resistance and water-
-property functions, and provides the temporal-superposition `convolution` and the
-`outlet_transfer_function`. The borehole length is found with
-[Optimization.jl](https://github.com/SciML/Optimization.jl) (Optim.jl `Fminbox(LBFGS())` backend).
+`GroundHeatExchangerSizing.jl` is a sizing layer of the GHE-jl ecosystem. Its backend is
+[GroundHeatExchanger.jl](https://github.com/GHE-jl/GroundHeatExchanger.jl). That package re-exports
+the [GroundResponse.jl](https://github.com/GHE-jl/GroundResponse.jl) ground models and the
+[BoreholeResistance.jl](https://github.com/GHE-jl/BoreholeResistance.jl) resistance and water
+property functions. It also provides the temporal-superposition `convolution` and the
+`outlet_transfer_function`. The two families solve for the borehole length in different ways. The
+alternative ASHRAE equation uses a fixed-point iteration. The borehole-outlet method uses a bounded
+optimisation from [Optimization.jl](https://github.com/SciML/Optimization.jl) with the Optim.jl
+`Fminbox(LBFGS())` backend.
 
-> **Scope** — the package sizes on **ground** thermal loads. If you have only a building load and
+> **Scope.** The package sizes on **ground** thermal loads. If you have only a building load and
 > average heating/cooling COPs, `Q_COP(Qb, COP_heating, COP_cooling)` converts them to ground loads
-> as a convenience. Load- or temperature-dependent COPs and capacity limiting remain the
+> as a convenience. Load-dependent or temperature-dependent COPs and capacity limiting remain the
 > responsibility of `GroundSourceHeatPumpDesign.jl`.
 
 ## Quick start
@@ -37,7 +40,7 @@ xy = [0.0 0.0]                       # borehole coordinates (nb × 2) [m]
 rb, D          = 0.075, 4.0          # borehole radius, buried depth [m]
 ks, Cs         = 2.25, 2.5e6         # ground conductivity [W/mK], heat capacity [J/m³K]
 s, ro, ri      = 0.075, 0.0167, 0.013
-kg, Cg         = 1.73, 3.0e6         # grout conductivity / heat capacity
+kg, Cg         = 1.73, 2.5e6         # grout conductivity / heat capacity
 kp, Cp         = 0.40, 1.54e6        # pipe  conductivity / heat capacity
 kf, cf, ρf, μf = 0.468, 4019.0, 1026.0, 3.37e-3   # fluid properties
 V              = 4.9e-4              # flow rate per borehole loop [m³/s]
@@ -53,13 +56,15 @@ res = outlet_sizing(Q, xy, rb, D, ks, Cs, s, ro, ri, kg, Cg, kp, Cp, kf, cf, ρf
                     level = :L4)
 ```
 
-Every sizing call returns `(H, H_low, H_high, sol_low, sol_high)`: the governing length `H` [m]
-(the larger of the two limits), the per-limit lengths, and the two `Optimization.jl` solutions.
+The two families return different named tuples. `alternative_sizing` returns `(H, Hi)`. `H` is the
+governing borehole length in metres, which is the larger of the two operating-limit lengths. `Hi` is
+the vector of fixed-point iterates. `outlet_sizing` returns `(H, H_low, H_high)`, where `H` is the
+governing length and `H_low` and `H_high` are the two per-limit lengths.
 
 ## Sizing equations
 
-Both families expose per-level functions and a dispatcher that takes the **hourly** load and
-resamples it internally (`level = :L2 | :L3 | :L4`).
+Both families expose per-level functions and a dispatcher. The dispatcher takes the **hourly** load
+and resamples it internally (`level = :L2 | :L3 | :L4`).
 
 | Function | Level | Load input | Ground response |
 |---|---|---|---|
@@ -75,7 +80,8 @@ resamples it internally (`level = :L2 | :L3 | :L4`).
 The finite-line-source g-function is evaluated under the equal-mean-wall-temperature boundary
 condition (**BC-II**) by successive spatial superposition, on a `FLSModel`. The effective borehole
 thermal resistance `Rb*` is always computed internally with the first-order multipole method and the
-axial short-circuit correction (`resistance_ULoop_effective`), recomputed at each candidate length.
+axial short-circuit correction (`resistance_ULoop_effective`). It is recomputed at each candidate
+length.
 
 ### Common arguments
 
@@ -94,18 +100,18 @@ axial short-circuit correction (`resistance_ULoop_effective`), recomputed at eac
 | `V` | volumetric flow rate in one U-tube loop (per borehole) | m³/s |
 | `T0`, `Tlim` | undisturbed ground temperature, `[low, high]` limits | °C |
 
-Keywords: `level` (`:L2`/`:L3`/`:L4`, dispatcher only), `tp` (peak duration [h], default 6),
-`ny` (design period [years], default 10), `model` (`Rb*` boundary condition `"UHF"`/`"UBW"`/`"mean"`),
-and any of `H0`, `lb`, `ub`, `optimizer`, `adtype` forwarded to the optimiser.
+The keywords are `level` (`:L2`, `:L3` or `:L4`, dispatcher only), `tp` (peak duration in hours,
+default 6), and `ny` (design period in years, default 10).
 
-> **Note** The borehole-outlet transfer function uses the short-term ANN of Pasquier et al. (2018),
-> valid for `H ∈ [110, 200] m` and a narrow band of geometric/thermal parameters; the length search
-> is bounded to `[50, 250] m`. Out-of-range inputs are clamped by the backend (with a warning).
+> **Note.** The borehole-outlet transfer function uses the short-term ANN of Pasquier et al. (2018).
+> That network is valid for `H` between 110 and 200 m and for a narrow band of geometric and thermal
+> parameters. The length search is bounded to the same 110 to 200 m range. Inputs outside the
+> training ranges are clamped by the backend, which prints a warning.
 
 ## Thermal load analysis
 
 The load-resampling helpers (in `thermal_load_analysis.jl`) convert an hourly profile into the forms
-the L2/L3 equations need, and are used internally by the dispatchers.
+the L2 and L3 equations need. The dispatchers use them internally.
 
 | Function | Purpose |
 |---|---|
@@ -116,12 +122,23 @@ the L2/L3 equations need, and are used internally by the dispatchers.
 | `Q_monthly_to_three_pulses(Qm)` | Monthly loads → 3 × 2 three-pulse loads |
 | `Q_cutoff(Q, ch, cc)` | Scale the heating/cooling peaks of an hourly profile |
 
-## Optimisation
+## Solving for the length
 
-Each sizing method builds, for both temperature limits, a residual `|Tlim − extremum(T(H))|` and
-minimises it over `H ∈ [50, 250] m`. The default solver is the Optim.jl `Fminbox(LBFGS())` with
-`AutoFiniteDiff()` gradients (the g-functions, transfer functions and neural network are not
-dual-number differentiable). The governing length is the larger of the two per-limit results.
+The two families reach the borehole length in different ways.
+
+The alternative ASHRAE equation uses a fixed-point iteration. It starts from an initial length and
+computes a new length from the closed-form ASHRAE expression. It repeats this until the length stops
+changing by more than 0.01 m or a maximum iteration count is reached. The g-function is recomputed at
+each iterate because it depends on the length.
+
+The borehole-outlet method uses a bounded optimisation. For each operating limit it minimises the
+absolute difference between the limit and the temperature extremum over `H` between 110 and 200 m.
+The default solver is the Optim.jl `Fminbox(LBFGS())` with `AutoFiniteDiff()` gradients. Finite
+differences are used because the g-functions, the transfer function and the neural network are not
+dual-number differentiable.
+
+Both families size against a low and a high operating limit. The governing length is the larger of
+the two per-limit results.
 
 ## Scripts
 
@@ -132,14 +149,14 @@ julia --project=script -e 'using Pkg; Pkg.instantiate()'
 julia --project=script script/script_alternative_sizing.jl
 ```
 
-Each script saves its figure to `script/figures/`.
+Each script displays its figure.
 
 | Script | What it shows |
 |---|---|
 | `script_alternative_sizing.jl` | Alternative ASHRAE L2/L3/L4 lengths on the four Ahmadfard & Bernier cases |
 | `script_outlet_sizing.jl` | Outlet transfer-function sizing vs the alternative equation, per level |
-| `script_thermal_load_analysis.jl` | The hourly ↔ monthly ↔ three-pulse load conversions |
-| `Ahmadfard_cases.jl` | The four reference cases (loads + parameters) of Ahmadfard & Bernier (2019) |
+| `script_thermal_load_analysis.jl` | The hourly, monthly and three-pulse load conversions |
+| `Ahmadfard_cases.jl` | The four reference cases (loads and parameters) of Ahmadfard & Bernier (2019) |
 
 ## Installation
 
@@ -164,7 +181,7 @@ Pkg.instantiate()
 | [GroundHeatExchanger.jl](https://github.com/GHE-jl/GroundHeatExchanger.jl) | FLS g-functions and outlet transfer function, temporal-superposition `convolution` (re-exports GroundResponse.jl and BoreholeResistance.jl) |
 | [GroundResponse.jl](https://github.com/GHE-jl/GroundResponse.jl) | `FLSModel`, `ground_response`, spatial superposition |
 | [BoreholeResistance.jl](https://github.com/GHE-jl/BoreholeResistance.jl) | Effective borehole resistance `Rb*`, water properties |
-| [Optimization.jl](https://github.com/SciML/Optimization.jl) / [OptimizationOptimJL.jl](https://github.com/SciML/Optimization.jl) | Bounded borehole-length optimisation |
+| [Optimization.jl](https://github.com/SciML/Optimization.jl) / [OptimizationOptimJL.jl](https://github.com/SciML/Optimization.jl) | Bounded borehole-length optimisation (outlet method) |
 | [FiniteDiff.jl](https://github.com/JuliaDiff/FiniteDiff.jl) | Finite-difference gradients for the optimiser |
 
 ### Scripts only

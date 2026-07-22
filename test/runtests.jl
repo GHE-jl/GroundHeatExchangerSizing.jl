@@ -7,10 +7,11 @@ using Test
 #   1. Thermal-load analysis — pure, deterministic resampling of a synthetic hourly profile. These
 #      are fully checked (shapes and exact energy/peak relations).
 #
-#   2. Sizing equations (alternative ASHRAE and borehole-outlet transfer function) — run on a small
-#      synthetic case and on the Ahmadfard & Bernier (2019) validation cases. These are *smoke*
-#      tests: they check that each level and dispatcher runs and returns a governing length within
-#      the [50, 250] m search bounds, with the expected result fields.
+#   2. Sizing equations (alternative ASHRAE and borehole-outlet transfer function). They run on a
+#      small synthetic case and on the Ahmadfard & Bernier (2019) validation cases. These are smoke
+#      tests. They check that each level and dispatcher runs and returns the expected result fields
+#      with a finite governing length. The outlet method result is also checked to lie within its
+#      [110, 200] m search bounds.
 #
 #      Numerical validation against the published reference lengths — Ahmadfard & Bernier (2019)
 #      Appendix B and Dion & Pasquier (2025) Table 2 — is intentionally *deferred*: the borehole
@@ -31,13 +32,22 @@ const CASE = (rb = 0.075, D = 4.0, ks = 1.8, Cs = 2.0736e6, s = 0.075, ro = 0.01
     kg = 1.4, Cg = 3.9e6, kp = 0.43, Cp = 1.54e6, kf = 0.48, cf = 3795.0, ρf = 1052.0,
     μf = 5.2e-3, V = 4.0e-4, T0 = 17.5, Tlim = [0.0, 35.0])
 
-# Helper: assert a sizing result is well-formed and inside the search bounds.
-function check_result(res)
+# Helper: assert an outlet sizing result is well-formed and inside the search bounds.
+function check_outlet(res)
     @test res isa NamedTuple
-    @test Set(keys(res)) == Set((:H, :H_low, :H_high, :sol_low, :sol_high))
+    @test Set(keys(res)) == Set((:H, :H_low, :H_high))
     @test isfinite(res.H)
     @test GroundHeatExchangerSizing._H_LB - 1e-6 <= res.H <= GroundHeatExchangerSizing._H_UB + 1e-6
     @test res.H ≈ max(res.H_low, res.H_high)
+end
+
+# Helper: assert an alternative sizing result is well-formed. The alternative equation uses a
+# fixed-point iteration, so it returns the governing length and the vector of iterates.
+function check_alternative(res)
+    @test res isa NamedTuple
+    @test Set(keys(res)) == Set((:H, :Hi))
+    @test isfinite(res.H)
+    @test res.H ≈ res.Hi[end]
 end
 
 @testset "GroundHeatExchangerSizing.jl" begin
@@ -75,7 +85,7 @@ end
             res = alternative_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks, CASE.Cs, CASE.s,
                 CASE.ro, CASE.ri, CASE.kg, CASE.kp, CASE.kf, CASE.cf, CASE.ρf, CASE.μf, CASE.V,
                 CASE.T0, CASE.Tlim; level = level, ny = 2.0)
-            check_result(res)
+            check_alternative(res)
         end
         # Explicit level entry points agree with the dispatcher.
         r_disp = alternative_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks, CASE.Cs, CASE.s,
@@ -98,7 +108,7 @@ end
             res = outlet_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks, CASE.Cs, CASE.s,
                 CASE.ro, CASE.ri, CASE.kg, CASE.Cg, CASE.kp, CASE.Cp, CASE.kf, CASE.cf, CASE.ρf,
                 CASE.μf, CASE.V, CASE.T0, CASE.Tlim; level = level, ny = 2.0)
-            check_result(res)
+            check_outlet(res)
         end
 
         @test_throws ArgumentError outlet_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks,

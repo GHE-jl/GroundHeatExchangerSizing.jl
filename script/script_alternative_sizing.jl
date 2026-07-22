@@ -37,8 +37,7 @@ for (ci, c) in enumerate(cases)
 end
 
 # Sizing time per level (BenchmarkTools), on case 4 (5×5 field). Interpolating locals ($...) keeps
-# @btime from measuring global-variable access. L2 (three g-function evaluations) is far cheaper than
-# L3/L4, which stay fast because the g-function is sub-sampled and PCHIP-interpolated (interp = true).
+# @btime from measuring global-variable access.
 let p = ahmadfard_cases(4)
     Q = Float64.(p.Q); xy = p.xy; V = p.V / p.nb
     rb, D, ks, Cs, s = p.r.b, p.D, p.k.s, p.C.s, p.s

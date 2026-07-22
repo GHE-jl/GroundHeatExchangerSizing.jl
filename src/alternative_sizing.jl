@@ -9,10 +9,13 @@
 # and positive for heat rejection (ground heating, building cooling).
 #
 # Reference:
-#   - Ahmadfard, M., & Bernier, M. (2018). Modifications to ASHRAE's sizing method for vertical
-#     ground heat exchangers. Science and Technology for the Built Environment, 24(7), 803-817.
+#   - Ahmadfard, M., & Bernier, M. (2018). Modifications to ASHRAE’s sizing method for vertical 
+#       ground heat exchangers. Science and Technology for the Built Environment, 24(7), 803–817. 
+#       https://doi.org/10.1080/23744731.2018.1423816
 #   - Ahmadfard, M., & Bernier, M. (2019). A review of vertical ground heat exchanger sizing tools
-#     including an inter-model comparison. Renewable and Sustainable Energy Reviews, 110, 247-265.
+#       including an inter-model comparison. Renewable and Sustainable Energy Reviews, 110, 247–265.
+#       https://doi.org/10.1016/j.rser.2019.04.045
+
 
 # Fixed-point iteration controls.
 const _SIZE_TOL = 0.01      # borehole-length convergence tolerance [m]
