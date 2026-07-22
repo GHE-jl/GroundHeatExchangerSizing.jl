@@ -1,41 +1,35 @@
 module GroundHeatExchangerSizing
 
-using Revise
+using GroundHeatExchanger
 
-# Functions to convert thermal loads between hourly, monthly, and three-pulse for use in sizing.
-includet("thermal_load_analysis.jl")
-# Functions to perform the alternative ASHRAE sizing method.
-includet("alternative_sizing.jl")
-# Functions to perform the borehole outlet sizing method.
-includet("borehole_outlet_sizing.jl")
-# Functions to perform the SCW sizing method.
-includet("standing_column_well_sizing.jl")
+# Source files (included once, in dependency order)
+include("thermal_load_analysis.jl")     # hourly ↔ monthly ↔ three-pulse ground-load resampling
+include("utils.jl")                     # deviation metrics
+include("alternative_sizing.jl")        # alternative ASHRAE sizing equation (fixed-point iteration)
+include("outlet_sizing.jl")             # borehole-outlet transfer-function sizing (optimisation)
 
-# From thermal_load_analysis.jl
+# Thermal-load analysis and resampling
 export QLoads,
     Q_analysis,
     Q_hourly_to_monthly,
     Q_hourly_to_three_pulses,
     Q_monthly_to_hourly,
     Q_monthly_to_three_pulses,
-    Q_cutoff,
-    Q_COP,
-    heat_pump_performance
+    Q_cutoff
 
-# From heat_pump.jl
-export heat_pump_performance
-
-# From AlternativeSizing
+# Alternative ASHRAE sizing equation (Ahmadfard & Bernier 2018, 2019)
 export alternative_sizing,
     alternative_sizing_L2,
     alternative_sizing_L3,
     alternative_sizing_L4
 
-# From OutletSizing.jl
-export outlet_sizing_hourly
+# Borehole-outlet transfer-function sizing (Dion & Pasquier 2025)
+export outlet_sizing,
+    outlet_sizing_L2,
+    outlet_sizing_L3,
+    outlet_sizing_L4
 
-# From SCWSizing.jl
-export scw_sizing_three_pulses,
-    scw_sizing_monthly,
-    scw_sizing_hourly
+# Utilities
+export Q_COP, deviation_metrics
+
 end

@@ -1,3 +1,13 @@
+"""
+    QLoads
+
+Summary of an hourly annual ground load profile produced by [`Q_analysis`](@ref): the hourly series
+together with the yearly, monthly and peak (heating/cooling) values used by the sizing equations.
+The fields are the hourly profile `hr`; the lower/higher/absolute-maximum hourly loads `hₗ`, `hₕ`,
+`h`; the average, lower-peak and higher-peak monthly loads `m̄ₐ`, `m̄ₗ`, `m̄ₕ` (12 values each); the
+average monthly loads `mₗ`, `mₕ` occurring when the extreme hourly loads occur; and the yearly
+average load `y`. All loads are in watts.
+"""
 struct QLoads
     hr::Vector{Float64}         # Hourly annual heat load profile
     hₗ::Float64                 # Lower annual heat load value
@@ -21,7 +31,7 @@ profile.
 # Arguments
     - Q: Heat load profile to analyse (8760x1) [W]
 # Ouput
-    - A structure QLoads based on the input vector of heat loads
+    - A structure `QLoads` based on the input vector of heat loads
 """
 function Q_analysis(Q::AbstractVector{<:Real})
     # Preallocation
