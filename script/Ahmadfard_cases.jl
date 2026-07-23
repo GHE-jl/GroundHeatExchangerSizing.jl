@@ -1,12 +1,9 @@
-"""
-File that contains all the reference ground loads and ground heat exchanger (GHE) parameters from 
-the reference article of Ahmadfard and Bernier (2019).
-
-Reference
-Ahmadfard, M., & Bernier, M. (2019). A review of vertical ground heat exchanger sizing tools 
-including an inter-model comparison. Renewable and Sustainable Energy Reviews, 110, 247–265. 
-https://doi.org/10.1016/j.rser.2019.04.045
-"""
+# File that contains all the reference ground loads and ground heat exchanger (GHE) parameters from 
+# the reference article of Ahmadfard and Bernier (2019).
+# Reference
+# Ahmadfard, M., & Bernier, M. (2019). A review of vertical ground heat exchanger sizing tools 
+# including an inter-model comparison. Renewable and Sustainable Energy Reviews, 110, 247–265. 
+# https://doi.org/10.1016/j.rser.2019.04.045
 
 function ahmadfard_cases(n::Int)
     fn_name = Symbol("ahmadfard_case_$n")
@@ -36,8 +33,8 @@ function ahmadfard_case_1()
     ρ = (f = 1052.0,)       # Fluid density (kg/m³)
     C = (f = ρ.f * 3795.0,  # Fluid volumetric specific heat (J/m³K)
         s = 2073600.0,      # Ground volumetric specific heat
-        g = 3.9e6,          # Grout volumetric specific heat
-        p = 1.54e6)         # Pipe volumetric specific heat
+        g = 3.0e6,          # Grout volumetric specific heat (Table 1's 3000 kJ/m³K — DeepANN's Cg upper bound)
+        p = 1.9e6)          # Pipe volumetric specific heat (DeepANN's fixed Cp, not the paper's 1540 kJ/m³K)
     μ = 5.2e-3              # Fluid viscosity (Pa·s)
 
     # Thermal properties
@@ -77,8 +74,8 @@ function ahmadfard_case_2()
     ρ = (f = 1026.0,)       # Fluid density (kg/m³)
     C = (f = ρ.f * 4019.0,  # Volumetric fluid specific heat (J/m³K)
         s = 2.877e6,        # Ground specific heat
-        g = 3.9e6,          # Grout specific heat
-        p = 1.54e6)         # Pipe specific heat
+        g = 3.0e6,          # Grout specific heat (Table 1's 3000 kJ/m³K — DeepANN's Cg upper bound)
+        p = 1.9e6)          # Pipe specific heat (DeepANN's fixed Cp, not the paper's 1540 kJ/m³K)
     μ = 3.37e-3             # Fluid viscosity (Pa·s)
 
     # Thermal properties
@@ -94,7 +91,10 @@ function ahmadfard_case_2()
 
     # System configuration
     R = (b = 0.113,)        # Borehole thermal resistance (m·K/W)
-    V = 29 / ρ.f * nb       # Total fluid flow rate (m³/s)
+    # `V` is total (whole-field) flow; the caller divides by `nb` to recover the per-borehole flow
+    # fed to the ANN. The extra `* nb` here used to cancel that division, feeding the ANN a
+    # per-borehole flow ~100x too large (permanently clamped, far outside its 15-35 L/min range).
+    V = 29 / ρ.f            # Total fluid flow rate (m³/s)
 
     return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
@@ -118,8 +118,8 @@ function ahmadfard_case_3()
     ρ = (f = 1026.0,)       # Fluid density (kg/m³)
     C = (f = ρ.f * 4019.0,  # Volumetric fluid specific heat (J/m³K)
         s = 2.592e6,        # Ground specific heat
-        g = 3.9e6,          # Grout specific heat
-        p = 1.54e6)         # Pipe specific heat
+        g = 3.0e6,          # Grout specific heat (Table 1's 3000 kJ/m³K — DeepANN's Cg upper bound)
+        p = 1.9e6)          # Pipe specific heat (DeepANN's fixed Cp, not the paper's 1540 kJ/m³K)
     μ = 3.37e-3             # Fluid viscosity (Pa·s)
 
     # Thermal properties
@@ -135,7 +135,8 @@ function ahmadfard_case_3()
 
     # System configuration
     R = (b = 0.1,)           # Borehole thermal resistance (m·K/W)
-    V = 33.1 / ρ.f * nb      # Total fluid flow rate (m³/s)
+    # See ahmadfard_case_2's note: `V` is total flow, no extra `* nb` (the caller divides by `nb`).
+    V = 33.1 / ρ.f           # Total fluid flow rate (m³/s)
 
     return (; Q, n, xy, nb, B, D, r, s, ρ, C, μ, k, T, R, V)
 end
@@ -159,8 +160,8 @@ function ahmadfard_case_4()
     ρ = (f = 1026.0,)       # Fluid density (kg/m³)
     C = (f = ρ.f * 4019,    # Volumetric fluid specific heat (J/m³K)
         s = 2.052e6,        # Ground specific heat
-        g = 3.9e6,          # Grout specific heat
-        p = 1.54e6)         # Pipe specific heat
+        g = 3.0e6,          # Grout specific heat (Table 1's 3000 kJ/m³K — DeepANN's Cg upper bound)
+        p = 1.9e6)          # Pipe specific heat (DeepANN's fixed Cp, not the paper's 1540 kJ/m³K)
     μ = 3.37e-3             # Fluid viscosity (Pa·s)
 
     # Thermal properties

@@ -27,11 +27,10 @@ for (ci, c) in enumerate(cases)
     Q = Float64.(p.Q)
     V = p.V / p.nb                     # per-borehole loop flow [m³/s] (case stores total flow)
     for (li, lvl) in enumerate(levels)
-        res = alternative_sizing(Q, p.xy, p.r.b, p.D, p.k.s, p.C.s, p.s, p.r.o, p.r.i, p.k.g,
+        H[ci, li] = alternative_sizing(Q, p.xy, p.r.b, p.D, p.k.s, p.C.s, p.s, p.r.o, p.r.i, p.k.g,
             p.k.p, p.k.f, p.C.f / p.ρ.f, p.ρ.f, p.μ, V, p.T.g, [p.T.L, p.T.H]; level = lvl)
-        H[ci, li] = res.H
-        Δ = 100 * (res.H - H_ref[ci, li]) / H_ref[ci, li]
-        println(lpad(c, 3), lpad(string(lvl), 6), lpad(round(res.H; digits = 1), 8),
+        Δ = 100 * (H[ci, li] - H_ref[ci, li]) / H_ref[ci, li]
+        println(lpad(c, 3), lpad(string(lvl), 6), lpad(round(H[ci, li]; digits = 1), 8),
             lpad(round(H_ref[ci, li]; digits = 1), 9), lpad(round(Δ; digits = 1), 8))
     end
 end

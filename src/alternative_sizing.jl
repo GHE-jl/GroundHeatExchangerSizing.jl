@@ -49,7 +49,7 @@ borehole length is found by the fixed-point iteration of Ahmadfard & Bernier (20
     - `tp`: Peak pulse duration [h] (default 6)
     - `ny`: Design period [years] (default 10)
 # Output
-    - `(H, Hi)`: governing borehole length [m] and the vector of iterates [m]
+    - `H`: governing borehole length [m]
 """
 function alternative_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real,
     D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, kp::Real, kf::Real,
@@ -74,7 +74,7 @@ function alternative_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:
         L_high = (Q3[1, 2] * Rgy + Q3[2, 2] * Rgm + Q3[3, 2] * (Rgh + Rbe)) / (Tlim[2] - T0)
         push!(Hi, max(L_low, L_high) / nb)
     end
-    return (H = Hi[end], Hi = Hi)
+    return Hi[end]
 end
 
 """
@@ -106,7 +106,7 @@ function _alternative_convolution(Qc::AbstractVector{<:Real}, Qh::AbstractVector
         L_high = maximum(convolution(Qh_full, g) .+ Qh_full .* Rbe) / (Tlim[2] - T0)
         push!(Hi, max(L_low, L_high) / nb)
     end
-    return (H = Hi[end], Hi = Hi)
+    return Hi[end]
 end
 
 """
@@ -121,7 +121,7 @@ each month, [`Q_monthly_to_hourly`](@ref)) and superimposed with the field FLS g
       [`Q_hourly_to_monthly`](@ref)
     - remaining arguments and keywords: as in [`alternative_sizing_L2`](@ref)
 # Output
-    - `(H, Hi)`: governing borehole length [m] and the vector of iterates [m]
+    - `H`: governing borehole length [m]
 """
 function alternative_sizing_L3(Qm::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real,
     D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, kp::Real, kf::Real,
@@ -143,7 +143,7 @@ full 8760-hour ground load profile with the field FLS g-function by FFT convolut
     - remaining arguments: as in [`alternative_sizing_L2`](@ref) (no `tp`: hourly loads are used
       directly)
 # Output
-    - `(H, Hi)`: governing borehole length [m] and the vector of iterates [m]
+    - `H`: governing borehole length [m]
 """
 function alternative_sizing_L4(Q::AbstractVector{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real,
     D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, kp::Real, kf::Real,
@@ -163,7 +163,7 @@ profile `Q` (8760) [W] and resampling it internally for the requested `level`:
     - `:L4` (hourly, default).
 All other arguments and keywords are as in [`alternative_sizing_L2`](@ref).
 # Output
-    - `(H, Hi)`: governing borehole length [m] and the vector of iterates [m]
+    - `H`: governing borehole length [m]
 """
 function alternative_sizing(Q::AbstractVector{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real,
     D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, kp::Real, kf::Real,

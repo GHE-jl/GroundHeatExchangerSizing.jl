@@ -7,8 +7,9 @@
 #
 # There is no explicit borehole resistance term, as Rb* is carried inside ḡ. Unlike the alternative
 # ASHRAE equation (a fixed-point iteration), the borehole length here is found by optimisation. For
-# each operating limit the length is the minimiser of |Tlim - extremum(Tout)| over H ∈ [110, 200] m
-# — the H training range of the short-term ANN (`short_term_response` in GroundResponse.jl).
+# each operating limit the length is the minimiser of |Tlim - extremum(Tout)| over H ∈ [50, 250] m
+# — the H training range of `DeepANN`, the short-term ANN `outlet_transfer_function` defaults to
+# (GroundHeatExchanger.jl).
 #
 # Ground loads Q are per convention negative for heat extraction (ground cooling, building heating)
 # and positive for heat rejection (ground heating, building cooling).
@@ -17,29 +18,44 @@
 #   - Dion, G., & and Pasquier, P. (2025). Ground heat exchanger sizing using borehole outlet 
 #       transfer function. Science and Technology for the Built Environment, 31(10), 1–13. 
 #       https://doi.org/10.1080/23744731.2025.2523200
-#   - Pasquier, P., Zarrella, A., & Labib, R. (2018). Application of artificial neural networks to 
-#       near-instant construction of short-term g-functions. Applied Thermal Engineering, 143, 
+#   - Pasquier, P., Zarrella, A., & Labib, R. (2018). Application of artificial neural networks to
+#       near-instant construction of short-term g-functions. Applied Thermal Engineering, 143,
 #       910–921. https://doi.org/10.1016/j.applthermaleng.2018.07.137
+#   - Pasquier, P., & Marcotte, D. (2020). Robust identification of volumetric heat capacity and
+#       analysis of thermal response tests by Bayesian inference with correlated residuals. Applied
+#       Energy, 261, 114394. https://doi.org/10.1016/j.apenergy.2019.114394
 
-using Optimization, OptimizationOptimJL, FiniteDiff
+using Optim
 
 # Bounded length-optimisation controls (not user choices).
-const _H0 = 150.0           # initial borehole length [m] (centre of the ANN H range)
-const _H_LB = 110.0         # lower bound [m] (short-term ANN H validity)
-const _H_UB = 200.0         # upper bound [m] (short-term ANN H validity)
+const _H_LB = 50.0          # lower bound [m] (DeepANN H validity — the default short-term ANN)
+const _H_UB = 250.0         # upper bound [m] (DeepANN H validity — the default short-term ANN)
+const _H_TOL = 1.0e-3       # length convergence tolerance [m]
+const _H_MAXIT = 1000       # optimiser iteration cap
 
 """
     _optimize_length(objective)
 
 Minimise `objective(H)`: the temperature-limit residual `|Tlim - extremum(Tout(H))|` over the
-borehole length `H ∈ [110, 200] m` (the short-term ANN H range), with Optimization.jl
-(`Fminbox(LBFGS())`, finite differences). Returns the optimal length [m]. Internal helper shared by
-the three outlet levels.
+borehole length `H ∈ [50, 250] m` (`DeepANN`'s H range). The residual is usually a smooth,
+one-dimensional, unimodal (interior-minimum) function of `H`, so it is minimised with Optim.jl's
+`Brent` method. Brent is a derivative-free bounded solver. It brackets the minimum inside
+`[50, 250]` and shrinks the bracket until the length stops moving by more than `_H_TOL`. It needs
+no initial guess, no gradient and no bound barrier, so it converges in a few tens of evaluations.
+When a limit is never actually binding across the whole range (e.g. the low/heating limit for a
+strongly cooling-dominated load), the residual instead decreases monotonically toward one of the
+two edges, with its minimum sitting *at* that boundary rather than in the interior — a shape Brent
+isn't built to find, since it only brackets interior dips. The two boundary values are therefore
+checked explicitly against Brent's interior candidate, and whichever is smallest wins. Returns the
+optimal length [m]. Internal helper shared by the three outlet levels.
 """
 function _optimize_length(objective)
-    f = OptimizationFunction((u, _) -> objective(u[1]), Optimization.AutoFiniteDiff())
-    prob = OptimizationProblem(f, [_H0]; lb = [_H_LB], ub = [_H_UB])
-    return solve(prob, Fminbox(LBFGS())).u[1]
+    res = optimize(objective, _H_LB, _H_UB, Brent(); abs_tol = _H_TOL, iterations = _H_MAXIT)
+    H_interior, f_interior = Optim.minimizer(res), Optim.minimum(res)
+    f_lo, f_hi = objective(_H_LB), objective(_H_UB)
+    f_lo < f_interior && return _H_LB
+    f_hi < f_interior && return _H_UB
+    return H_interior
 end
 
 """
@@ -70,7 +86,7 @@ length is optimised against each operating limit.
     - `tp`: Peak pulse duration [h] (default 6)
     - `ny`: Design period [years] (default 10)
 # Output
-    - `(H, H_low, H_high)`: governing borehole length and the two per-limit lengths [m]
+    - `H`: governing borehole length [m]
 """
 function outlet_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real,
     D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, Cg::Real, kp::Real,
@@ -87,7 +103,7 @@ function outlet_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}
     H_low = _optimize_length() do H
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
         ḡ = outlet_transfer_function(tsup, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
-            FLSModel(H, D, ks, Cs); xy = xy)
+            FLSModel(H, D, ks, Cs); xy = xy, model = DeepANN())
         Γh, Γm, Γy = ḡ[1], ḡ[2] - ḡ[1], ḡ[3] - ḡ[2]
         Tout = T0 + (Q3[1, 1] * Γy + Q3[2, 1] * Γm + Q3[3, 1] * Γh) / (nb * V * Cf)
         return abs(Tlim[1] - Tout)
@@ -95,12 +111,12 @@ function outlet_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}
     H_high = _optimize_length() do H
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
         ḡ = outlet_transfer_function(tsup, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
-            FLSModel(H, D, ks, Cs); xy = xy)
+            FLSModel(H, D, ks, Cs); xy = xy, model = DeepANN())
         Γh, Γm, Γy = ḡ[1], ḡ[2] - ḡ[1], ḡ[3] - ḡ[2]
         Tout = T0 + (Q3[1, 2] * Γy + Q3[2, 2] * Γm + Q3[3, 2] * Γh) / (nb * V * Cf)
         return abs(Tlim[2] - Tout)
     end
-    return (H = max(H_low, H_high), H_low = H_low, H_high = H_high)
+    return max(H_low, H_high)
 end
 
 """
@@ -127,18 +143,18 @@ function _outlet_convolution(Qc::AbstractVector{<:Real}, Qh::AbstractVector{<:Re
     H_low = _optimize_length() do H
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
         ḡ = outlet_transfer_function(t, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
-            FLSModel(H, D, ks, Cs); xy = xy, interp = true)
+            FLSModel(H, D, ks, Cs); xy = xy, interp = true, model = DeepANN())
         Tout = T0 .+ convolution(Qc_full ./ (nb * V * Cf), ḡ)
         return abs(Tlim[1] - minimum(Tout))
     end
     H_high = _optimize_length() do H
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
         ḡ = outlet_transfer_function(t, ks, Cs, kg, Cg, kp, Cp, Cf, ri, ro, rb, H, V, s, Rbe,
-            FLSModel(H, D, ks, Cs); xy = xy, interp = true)
+            FLSModel(H, D, ks, Cs); xy = xy, interp = true, model = DeepANN())
         Tout = T0 .+ convolution(Qh_full ./ (nb * V * Cf), ḡ)
         return abs(Tlim[2] - maximum(Tout))
     end
-    return (H = max(H_low, H_high), H_low = H_low, H_high = H_high)
+    return max(H_low, H_high)
 end
 
 """
@@ -153,7 +169,7 @@ each month, [`Q_monthly_to_hourly`](@ref)) and superimposed with the outlet tran
       [`Q_hourly_to_monthly`](@ref)
     - remaining arguments and keywords: as in [`outlet_sizing_L2`](@ref)
 # Output
-    - `(H, H_low, H_high)`: governing borehole length and the two per-limit lengths [m]
+    - `H`: governing borehole length [m]
 """
 function outlet_sizing_L3(Qm::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real,
     D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, Cg::Real, kp::Real,
@@ -175,7 +191,7 @@ convolution (no load aggregation).
     - `Q`: Hourly ground load profile for one year (8760) [W]
     - remaining arguments: as in [`outlet_sizing_L2`](@ref) (no `tp`)
 # Output
-    - `(H, H_low, H_high)`: governing borehole length and the two per-limit lengths [m]
+    - `H`: governing borehole length [m]
 """
 function outlet_sizing_L4(Q::AbstractVector{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real, D::Real,
     ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, Cg::Real, kp::Real, Cp::Real,
@@ -196,7 +212,7 @@ load profile `Q` (8760) [W] and resampling it internally for the requested `leve
     - `:L4` (hourly, default).
 All other arguments and keywords are as in [`outlet_sizing_L2`](@ref).
 # Output
-    - `(H, H_low, H_high)`: governing borehole length and the two per-limit lengths [m]
+    - `H`: governing borehole length [m]
 """
 function outlet_sizing(Q::AbstractVector{<:Real}, xy::AbstractMatrix{<:Real}, rb::Real, D::Real,
     ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, Cg::Real, kp::Real, Cp::Real,

@@ -1,10 +1,7 @@
-```@meta
-CurrentModule = GroundHeatExchangerSizing
-```
-
 # API reference
 
 ```@index
+Modules = [GroundHeatExchangerSizing]
 ```
 
 ## Alternative ASHRAE sizing

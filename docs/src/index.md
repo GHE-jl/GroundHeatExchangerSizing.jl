@@ -1,7 +1,3 @@
-```@meta
-CurrentModule = GroundHeatExchangerSizing
-```
-
 # GroundHeatExchangerSizing.jl
 
 Sizing of vertical **ground heat exchangers (GHE)**. The goal is to find the borehole length that
@@ -23,10 +19,12 @@ The package is a sizing layer of the GHE-jl ecosystem. Its backend is
 [GroundResponse.jl](https://github.com/GHE-jl/GroundResponse.jl) and
 [BoreholeResistance.jl](https://github.com/GHE-jl/BoreholeResistance.jl). The alternative ASHRAE
 equation solves for the length by a fixed-point iteration. The borehole-outlet method solves for the
-length with [Optimization.jl](https://github.com/SciML/Optimization.jl).
+length with a bounded one-dimensional optimisation using
+[Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl)'s `Brent` method.
 
 The package sizes on **ground** thermal loads. Converting building loads to ground loads through the
-heat-pump COP belongs to `GroundSourceHeatPumpDesign.jl`.
+heat-pump COP belongs to `GroundSourceHeatPumpDesign.jl`. However a helper function ``Q_COP()`` is
+present in this package for conversion.
 
 See the [Tutorial](@ref) to get started, the theory section for the governing equations, and the
 [API reference](@ref) for every function.

@@ -13,7 +13,8 @@ T_f(t) = T_g + \frac{1}{N_b H}\left[\sum_i Q_i\,R_{g,i} + Q_h\,R_b^\ast\right]
 Here ``T_g`` is the undisturbed ground temperature, ``N_b`` the number of boreholes, ``H`` the
 borehole length, ``Q_i`` the ground load pulses [W], ``R_{g,i}`` the effective ground thermal
 resistances built from the field g-function [°C·m/W], and ``R_b^\ast`` the effective borehole
-thermal resistance.
+thermal resistance. Another way of writing the previous equation would be using the variable ``L``,
+such that ``L = N_b H``.
 
 ## Ground thermal resistances
 
@@ -28,6 +29,10 @@ R_{g,h} = g(t_1), \qquad
 R_{g,m} = g(t_2) - g(t_1), \qquad
 R_{g,y} = g(t_3) - g(t_2)
 ```
+
+>**Note**: Even though the above variables are named "resistances", they only share their units with
+>the effective borehole resistance ``R_b^\ast``. Indeed, these values are merely g-function
+>evaluated at specific time steps.
 
 **L3 and L4.** The load is superimposed with the full g-function by FFT `convolution`. For L3 the
 monthly load is first expanded to hourly, with the peak over the final ``t_p`` hours of each month.
@@ -46,9 +51,9 @@ thermal-capacity term, so it is recomputed at every candidate length.
 ## Solving for the length
 
 For each operating limit the length satisfies ``T_f = T_\text{lim}`` (the peak fluid temperature for
-L2, the extremum of the hourly series for L3 and L4). The equation is solved by a fixed-point
-iteration. The iteration starts from an initial length and computes a new length from the closed-form
-expression above. It repeats until the length stops changing by more than 0.01 m or a maximum
-iteration count is reached. The g-function is recomputed at each iterate because it depends on the
-length. The vector of iterates is returned as `Hi`. The governing design is the longer of the low
-and high limit lengths.
+**L2**, the extremum of the hourly series for L3 and L4). The equation is solved by a fixed-point
+iteration. The iteration starts from an initial length and computes a new length from the
+closed-form expression above. It repeats until the length stops changing by more than 0.01 m or a
+maximum iteration count is reached. The g-function is recomputed at each iterate because it depends
+on the length. The governing design, the value returned, is the longer of the low and high limit
+lengths.

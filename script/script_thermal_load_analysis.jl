@@ -4,8 +4,9 @@
 #   3. Q_monthly_to_hourly       — monthly loads → hourly profile (peak over the last tp hours)
 #   4. Q_monthly_to_three_pulses — monthly loads → three-pulse loads
 #
-# Run from the package root with the script environment:
-#   julia --project=script script/script_thermal_load_analysis.jl
+
+using Pkg; Pkg.activate(@__DIR__)
+# Pkg.instantiate()
 
 using GroundHeatExchangerSizing
 using CairoMakie
@@ -36,7 +37,4 @@ axislegend(ax2; position = :rb)
 ax3 = Axis(fig[2, 1:2], title = "Monthly-to-hourly reconstruction (heating column)",
     xlabel = "Hour", ylabel = "Q [W]")
 lines!(ax3, 1:size(Qhr, 1), Qhr[:, 2])
-
-mkpath(joinpath(@__DIR__, "figures"))
-save(joinpath(@__DIR__, "figures", "thermal_load_analysis.png"), fig)
-println("Saved figures/thermal_load_analysis.png")
+display(fig)

@@ -2,8 +2,8 @@
 
 Sizing a vertical ground heat exchanger means finding the borehole length ``H`` for which the
 heat-pump fluid temperature reaches an operating limit ``T_\text{lim}`` over the design period
-without exceeding it. Following Spitler & Bernier (2016) and Ahmadfard & Bernier (2019), sizing tools
-are classified by the temporal detail of the ground load:
+without exceeding it. Following Spitler & Bernier (2016) and Ahmadfard & Bernier (2019), sizing
+tools are classified by the temporal detail of the ground load:
 
 1. **L2** uses three pulses (the yearly average, the monthly average during the peak month, and the
    peak). They are applied over 10 years, one month and 4 to 6 hours.
@@ -26,9 +26,10 @@ finds it by a fixed-point iteration. The outlet method finds it by a bounded
 ## Sign convention and inputs
 
 Ground loads ``Q`` are negative for heat extraction (ground cooling, building heating) and positive
-for heat rejection (ground heating, building cooling). A GHE must satisfy a lower operating limit
-(dominated by the cooling loads) and a higher limit (dominated by the heating loads). The governing
-design is the longer of the two lengths.
+for heat rejection (ground heating, building cooling). A ground heat exchanger must satisfy a lower
+operating limit (dominated by the cooling loads) and a higher limit (dominated by the heating
+loads). The governing design is the longer of the two lengths.
 
 The package sizes on **ground** loads. Converting building loads to ground loads through the
 heat-pump coefficient of performance is the responsibility of `GroundSourceHeatPumpDesign.jl`.
+However a helper function ``Q_COP()`` is present in this package for conversion.

@@ -23,7 +23,8 @@ function deviation_metrics(y::AbstractVector, ŷ::AbstractVector)
 
     # Basic deviation metrics
     mae  = sum(ae) / n              # Mean absolute error
-    rmse = sqrt(sum(d .^ 2) / n)    # Root mean square error
+    mse  = sum(d .^ 2) / n          # Mean squared error
+    rmse = sqrt(mse)                # Root mean square error
 
     # Relative deviations; you can choose how to handle zeros in y
     rel = d ./ y                    # Relative deviation
@@ -31,7 +32,7 @@ function deviation_metrics(y::AbstractVector, ŷ::AbstractVector)
     mre  = sum(rel) / n             # Mean relative error
     mare = sum(arel) / n            # Mean absolute relative deviation
 
-    return (mae = mae, mre = mre, mare = mare, rmse = rmse)
+    return (mae = mae, mre = mre, mare = mare, mse = mse, rmse = rmse)
 end
 
 """
