@@ -7,10 +7,10 @@ GroundHeatExchangerSizing = "c69f955c-e283-4c57-b28d-9686908aa4bd"
 GroundResponse = "4e068bfd-c84d-4e7d-af33-179ff9550968"
 
 [sources]
-BoreholeResistance = {path = "..\\..\\BoreholeResistance.jl"}
-GroundHeatExchanger = {path = "..\\..\\GroundHeatExchanger.jl"}
+BoreholeResistance = {path = "../../BoreholeResistance.jl"}
+GroundHeatExchanger = {path = "../../GroundHeatExchanger.jl"}
 GroundHeatExchangerSizing = {path = ".."}
-GroundResponse = {path = "..\\..\\GroundResponse.jl"}
+GroundResponse = {path = "../../GroundResponse.jl"}
 
 [compat]
 BenchmarkTools = "1"
