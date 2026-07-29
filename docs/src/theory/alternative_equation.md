@@ -22,7 +22,7 @@ The FLS g-function ``g(t, H)`` [°C·m/W] is evaluated under the equal-mean-wall
 condition (**BC-II**) by successive spatial superposition, on a `FLSModel(H, D, k_s, C_s)`.
 
 **L2 (three pulses).** The superposition times are ``t_1 = t_h``, ``t_2 = t_m + t_h`` and
-``t_3 = t_y + t_m + t_h`` (peak ``t_h``, month ``t_m``, design period ``t_y``). The resistances are:
+``t_3 = t_y + t_m + t_h`` (peak ``t_h`` of 4 to 6 hours, month ``t_m`` of 30 days, design period ``t_y`` of 10 to 50m years). The resistances are:
 
 ```math
 R_{g,h} = g(t_1), \qquad
