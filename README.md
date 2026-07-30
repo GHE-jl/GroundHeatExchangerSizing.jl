@@ -1,5 +1,10 @@
 # GroundHeatExchangerSizing.jl
 
+[![CI](https://github.com/GHE-jl/GroundHeatExchangerSizing.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/GHE-jl/GroundHeatExchangerSizing.jl/actions/workflows/CI.yml)
+[![Docs: dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://GHE-jl.github.io/GroundHeatExchangerSizing.jl/dev)
+[![Docs: stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://GHE-jl.github.io/GroundHeatExchangerSizing.jl/stable)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 A Julia package to **size vertical ground heat exchangers (GHE)**. It finds the borehole length
 required to keep the heat carrier fluid temperature within its operating limits while covering the
 ground thermal loads required to maintain setpoint temperature in a building. The package provides two sizing families. Each family works at three levels of
