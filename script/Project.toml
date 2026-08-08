@@ -8,11 +8,11 @@ GroundResponse = "4e068bfd-c84d-4e7d-af33-179ff9550968"
 
 [sources]
 BoreholeResistance = {path = "../../BoreholeResistance.jl"}
-GroundHeatExchanger = {path = "../../GroundHeatExchanger.jl"}
 GroundHeatExchangerSizing = {path = ".."}
 GroundResponse = {path = "../../GroundResponse.jl"}
 
 [compat]
 BenchmarkTools = "1"
 CairoMakie = "0.15"
+GroundHeatExchanger = "1"
 julia = "1.11"
