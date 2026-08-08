@@ -9,11 +9,14 @@ GroundHeatExchanger = "bd8f68b8-2a15-4d14-8bb6-4cefce65f0ac"
 GroundResponse = "4e068bfd-c84d-4e7d-af33-179ff9550968"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 
-[sources]
-BoreholeResistance = {path = "../BoreholeResistance.jl"}
-GroundResponse = {path = "../GroundResponse.jl"}
+[sources.BoreholeResistance]
+path = "../BoreholeResistance.jl"
+
+[sources.GroundResponse]
+path = "../GroundResponse.jl"
 
 [compat]
+BoreholeResistance = "1"
 GroundHeatExchanger = "1"
 Optim = "1, 2"
 julia = "1.11"
