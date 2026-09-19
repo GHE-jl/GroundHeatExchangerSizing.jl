@@ -2,15 +2,13 @@
 
 ## Installation
 
-The GHE-jl packages are not yet registered. Develop the ecosystem packages side by side:
+`GroundHeatExchangerSizing.jl` is registered in the General registry, along with its dependencies
+`GroundHeatExchanger.jl`, `GroundResponse.jl` and `BoreholeResistance.jl`, so they all resolve
+automatically:
 
 ```julia
 using Pkg
-Pkg.develop(path = "../BoreholeResistance.jl")
-Pkg.develop(path = "../GroundResponse.jl")
-Pkg.develop(path = "../GroundHeatExchanger.jl")
-Pkg.develop(path = ".")
-Pkg.instantiate()
+Pkg.add("GroundHeatExchangerSizing")
 ```
 
 ## Sizing from an hourly ground load
