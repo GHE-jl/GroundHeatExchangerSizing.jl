@@ -36,6 +36,30 @@ function deviation_metrics(y::AbstractVector, ŷ::AbstractVector)
 end
 
 """
+    _Tlim_offset(Q, nb, V, ρf, cf, Tlim_at; loc = :mean)
+
+Temperature offset [°C]  from the fluid temperature at the location `loc` to the fluid temperature
+at `Tlim_at` (where the operating limits `Tlim` apply), for the ground load `Q` [W] (scalar or
+vector) of `nb` boreholes with a flow rate `V` per borehole. The locations are seen from the ground,
+not the heat pump. `:inlet` is the heat-pump leaving fluid temperature (LFT), `:outlet` the
+heat-pump entering fluid temperature (EFT) and `:mean` the mean fluid temperature. With `Q > 0` for
+heat injection (building cooling), the inlet is `Q/(2·nb·V·ρf·cf)` above the mean and the outlet the
+same amount below it. `alternative_sizing` uses it from the mean fluid temperature (`loc = :mean`)
+and `outlet_sizing` from the outlet temperature (`loc = :outlet`).
+"""
+function _Tlim_offset(Q, nb, V, ρf, cf, Tlim_at::Symbol; loc::Symbol = :mean)
+    # Position of a location relative to the mean fluid temperature [loop ΔT]
+    position(at) = at === :inlet ? 0.5 : at === :outlet ? -0.5 : at === :mean ? 0.0 :
+        throw(ArgumentError("loc must be :inlet, :outlet or :mean, got :$at"))
+
+    # Loop temperature difference [°C]
+    ΔT = Q ./ (nb * V * ρf * cf)
+
+    # Return the temperature offset from `loc` to `Tlim_at`
+    return (position(Tlim_at) - position(loc)) .* ΔT
+end
+
+"""
     Q_COP(Qb, COP_heating, COP_cooling)
 
 Convert building thermal load(s) to ground thermal load(s) using a heat-pump coefficient of

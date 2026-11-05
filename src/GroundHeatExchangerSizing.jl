@@ -4,7 +4,7 @@ using GroundHeatExchanger
 
 # Source files (included once, in dependency order)
 include("thermal_load_analysis.jl")     # hourly ↔ monthly ↔ three-pulse ground-load resampling
-include("utils.jl")                     # deviation metrics
+include("utils.jl")                     # deviation metrics, Q_COP, Tlim location offset
 include("alternative_sizing.jl")        # alternative ASHRAE sizing equation (fixed-point iteration)
 include("outlet_sizing.jl")             # borehole-outlet transfer-function sizing (optimisation)
 

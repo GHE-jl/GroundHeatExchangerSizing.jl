@@ -51,7 +51,7 @@ kf, cf, ρf, μf = 0.468, 4019.0, 1026.0, 3.37e-3   # fluid properties
 V              = 4.9e-4              # flow rate per borehole loop [m³/s]
 T0, Tlim       = 10.0, [0.0, 35.0]   # undisturbed ground temp, [low, high] limits [°C]
 
-# Alternative ASHRAE sizing (g-function)
+# Alternative ASHRAE sizing (g-function); Tlim at the ground inlet (heat-pump LFT) by default
 H = alternative_sizing(Q, xy, rb, D, ks, Cs, s, ro, ri, kg, kp, kf, cf, ρf, μf, V, T0, Tlim; level = :L4)
 
 # Borehole-outlet transfer-function sizing (Dion & Pasquier 2025)
@@ -101,7 +101,10 @@ length.
 | `T0`, `Tlim` | undisturbed ground temperature, `[low, high]` limits | °C |
 
 The keywords are `level` (`:L2`, `:L3` or `:L4`, dispatcher only), `tp` (peak duration in hours,
-default 6), and `ny` (design period in years, default 10).
+default 6), and `ny` (design period in years, default 10). For both `alternative_sizing` and
+`outlet_sizing`, `Tlim_at` sets where `Tlim` applies, seen from the ground (not the heat pump):
+`:inlet` (ground inlet = heat-pump LFT, default), `:outlet` (ground outlet = heat-pump EFT) or
+`:mean` (mean fluid temperature).
 
 > **Note.** The borehole-outlet transfer function uses `DeepANN` (Pasquier & Marcotte, 2020), the
 > default short-term ANN of `outlet_transfer_function`. That network is valid for `H` between 50
@@ -157,6 +160,7 @@ Each script displays its figure.
 |---|---|
 | `script_alternative_sizing.jl` | Alternative ASHRAE L2/L3/L4 lengths on the four Ahmadfard & Bernier cases |
 | `script_outlet_sizing.jl` | Outlet transfer-function sizing vs the alternative equation, per level |
+| `script_sizing_Tlim_location.jl` | Alternative sizing with `Tlim` at the ground inlet, mean and outlet |
 | `script_thermal_load_analysis.jl` | The hourly, monthly and three-pulse load conversions |
 | `Ahmadfard_cases.jl` | The four reference cases (loads and parameters) of Ahmadfard & Bernier (2019) |
 

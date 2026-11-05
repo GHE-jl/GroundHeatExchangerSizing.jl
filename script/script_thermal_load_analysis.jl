@@ -26,15 +26,21 @@ println("Yearly average load : $(round(analysis.y; digits = 1)) W")
 println("Peak heating / cooling : $(round(analysis.hₕ; digits = 1)) / ",
     "$(round(analysis.hₗ; digits = 1)) W")
 
-fig = Figure(size = (820, 520))
+fig = Figure()
+
 ax1 = Axis(fig[1, 1], title = "Hourly ground load", xlabel = "Hour", ylabel = "Q [W]")
 lines!(ax1, 1:length(Q), Q)
-ax2 = Axis(fig[1, 2], title = "Monthly loads", xlabel = "Month", ylabel = "Q [W]")
-barplot!(ax2, 1:12, Qm[:, 1]; label = "average")
-scatter!(ax2, 1:12, Qm[:, 2]; label = "cooling peak")
-scatter!(ax2, 1:12, Qm[:, 3]; label = "heating peak")
-axislegend(ax2; position = :rb)
-ax3 = Axis(fig[2, 1:2], title = "Monthly-to-hourly reconstruction (heating column)",
+
+ax2 = Axis(fig[1, 2], title = "Monthly-to-hourly reconstruction (heating column)",
     xlabel = "Hour", ylabel = "Q [W]")
-lines!(ax3, 1:size(Qhr, 1), Qhr[:, 2])
+lines!(ax2, 1:size(Qhr, 1), Qhr[:, 1], label = "heating")
+lines!(ax2, 1:size(Qhr, 1), Qhr[:, 2], label = "cooling")
+axislegend(ax2; position = :cb, orientation = :horizontal)
+
+ax3 = Axis(fig[2, 1:2], title = "Monthly loads", xlabel = "Month", ylabel = "Q [W]")
+barplot!(ax3, 1:12, Qm[:, 1]; label = "average")
+scatter!(ax3, 1:12, Qm[:, 2]; label = "cooling peak")
+scatter!(ax3, 1:12, Qm[:, 3]; label = "heating peak")
+axislegend(ax3; position = :cb, orientation = :horizontal)
+
 display(fig)

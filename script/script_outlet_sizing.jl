@@ -3,16 +3,14 @@
 # levels and compares the lengths with the alternative ASHRAE equation.
 
 using Pkg; Pkg.activate(@__DIR__)
-Pkg.instantiate()
+# Pkg.instantiate()
 
 using GroundHeatExchangerSizing
-using CairoMakie
 using BenchmarkTools
 using Logging
 
 # The short-term ANN warns on every evaluation for the test-case pipe/fluid properties that fall
-# outside its training ranges (see the note in the docs). Those inputs do not vary during the
-# length search, so silence Warn-level logging for this run instead of printing thousands of copies.
+# outside its training ranges.
 disable_logging(Logging.Warn)
 
 include("Ahmadfard_cases.jl")
@@ -29,11 +27,10 @@ for (ci, c) in enumerate(cases)
     for (li, lvl) in enumerate(levels)
         H_out[ci, li] = outlet_sizing(Q, p.xy, p.r.b, p.D, p.k.s, p.C.s, p.s, p.r.o, p.r.i, p.k.g,
             p.C.g, p.k.p, p.C.p, p.k.f, p.C.f / p.ρ.f, p.ρ.f, p.μ, V, p.T.g, [p.T.L, p.T.H];
-            level = lvl)
+            level = lvl, Tlim_at = :outlet)   # Dion & Pasquier (2025) limit the heat-pump EFT
         H_alt[ci, li] = alternative_sizing(Q, p.xy, p.r.b, p.D, p.k.s, p.C.s, p.s, p.r.o, p.r.i,
-            p.k.g, p.k.p, p.k.f, p.C.f / p.ρ.f, p.ρ.f, p.μ, V, p.T.g, [p.T.L, p.T.H]; level = lvl)
-        println("Case $c  $lvl : outlet H = $(round(H_out[ci, li]; digits = 1)) m | " *
-                "alternative H = $(round(H_alt[ci, li]; digits = 1)) m")
+            p.k.g, p.k.p, p.k.f, p.C.f / p.ρ.f, p.ρ.f, p.μ, V, p.T.g, [p.T.L, p.T.H];
+            level = lvl, Tlim_at = :outlet)   # as the reference
     end
 end
 
@@ -56,7 +53,6 @@ println("Mean |RE| — alternative: $(round(sum(abs, RE_alt) / length(RE_alt); d
         "outlet: $(round(sum(abs, RE_out) / length(RE_out); digits = 2))%")
 
 # Outlet sizing time per level (BenchmarkTools), on case 4 (5×5 field).
-#=
 let p = ahmadfard_cases(4)
     Q = Float64.(p.Q); xy = p.xy; V = p.V / p.nb
     rb, D, ks, Cs, s = p.r.b, p.D, p.k.s, p.C.s, p.s
@@ -70,15 +66,3 @@ let p = ahmadfard_cases(4)
             $kf, $cf, $ρf, $μf, $V, $T0, $Tlim; level = $lvl)
     end
 end
-=#
-
-# Compare the two sizing families per level.
-fig = Figure(size = (900, 320))
-for (li, lvl) in enumerate(levels)
-    ax = Axis(fig[1, li], xlabel = "Test case", ylabel = li == 1 ? "H [m]" : "",
-        title = string(lvl), xticks = (collect(cases), string.(cases)))
-    barplot!(ax, collect(cases) .- 0.2, H_alt[:, li]; width = 0.4, label = "alternative")
-    barplot!(ax, collect(cases) .+ 0.2, H_out[:, li]; width = 0.4, label = "outlet")
-    li == 3 && axislegend(ax; position = :lt)
-end
-display(fig)

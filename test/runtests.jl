@@ -19,7 +19,7 @@ const CASE = (rb = 0.075, D = 4.0, ks = 1.8, Cs = 2.0736e6, s = 0.075, ro = 0.01
 function check_outlet(H)
     @test H isa Real
     @test isfinite(H)
-    @test GroundHeatExchangerSizing._H_LB - 1e-6 <= H <= GroundHeatExchangerSizing._H_UB + 1e-6
+    @test GroundHeatExchangerSizing._OUT_LB - 1e-6 <= H <= GroundHeatExchangerSizing._OUT_UB + 1e-6
 end
 
 # Helper: assert an alternative sizing result is well-formed.
@@ -74,6 +74,16 @@ end
             CASE.ρf, CASE.μf, CASE.V, CASE.T0, CASE.Tlim; ny = 2.0)
         @test r_disp ≈ r_L2
 
+        # Tlim location, seen from the ground: :inlet (HP LFT) ≥ :mean ≥ :outlet (HP EFT)
+        H_at = Dict(at => alternative_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks, CASE.Cs,
+            CASE.s, CASE.ro, CASE.ri, CASE.kg, CASE.kp, CASE.kf, CASE.cf, CASE.ρf, CASE.μf,
+            CASE.V, CASE.T0, CASE.Tlim; level = :L4, ny = 2.0, Tlim_at = at)
+            for at in (:inlet, :mean, :outlet))
+        @test H_at[:inlet] > H_at[:mean] > H_at[:outlet]
+        @test_throws ArgumentError alternative_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks,
+            CASE.Cs, CASE.s, CASE.ro, CASE.ri, CASE.kg, CASE.kp, CASE.kf, CASE.cf, CASE.ρf,
+            CASE.μf, CASE.V, CASE.T0, CASE.Tlim; Tlim_at = :eft)
+
         @test_throws ArgumentError alternative_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks,
             CASE.Cs, CASE.s, CASE.ro, CASE.ri, CASE.kg, CASE.kp, CASE.kf, CASE.cf, CASE.ρf,
             CASE.μf, CASE.V, CASE.T0, CASE.Tlim; level = :L5)
@@ -89,6 +99,13 @@ end
                 CASE.μf, CASE.V, CASE.T0, CASE.Tlim; level = level, ny = 2.0)
             check_outlet(res)
         end
+
+        # Tlim location, seen from the ground: :inlet (HP LFT) ≥ :mean ≥ :outlet (HP EFT)
+        H_at = Dict(at => outlet_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks, CASE.Cs,
+            CASE.s, CASE.ro, CASE.ri, CASE.kg, CASE.Cg, CASE.kp, CASE.Cp, CASE.kf, CASE.cf,
+            CASE.ρf, CASE.μf, CASE.V, CASE.T0, CASE.Tlim; level = :L4, ny = 2.0, Tlim_at = at)
+            for at in (:inlet, :mean, :outlet))
+        @test H_at[:inlet] > H_at[:mean] > H_at[:outlet]
 
         @test_throws ArgumentError outlet_sizing(Q_synthetic, XY1, CASE.rb, CASE.D, CASE.ks,
             CASE.Cs, CASE.s, CASE.ro, CASE.ri, CASE.kg, CASE.Cg, CASE.kp, CASE.Cp, CASE.kf,

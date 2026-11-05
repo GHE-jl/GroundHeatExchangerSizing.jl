@@ -31,7 +31,7 @@ kf, cf, ρf, μf = 0.468, 4019.0, 1026.0, 3.37e-3
 V              = 4.9e-4
 T0, Tlim       = 10.0, [0.0, 35.0]
 
-# Alternative ASHRAE sizing (g-function)
+# Alternative ASHRAE sizing (g-function); Tlim at the ground inlet (heat-pump LFT) by default
 H = alternative_sizing(Q, xy, rb, D, ks, Cs, s, ro, ri, kg, kp, kf, cf, ρf, μf, V, T0, Tlim; level = :L4)
 
 # Borehole-outlet transfer-function sizing (needs the grout/pipe heat capacities Cg, Cp)
@@ -48,6 +48,10 @@ monthly and peak). `:L3` uses 12 monthly average and peak loads. `:L4` uses the 
 profile.
 
 The peak duration (`tp`, default 6 h) and the design period (`ny`, default 10 years) are keywords.
+
+For both `alternative_sizing` and `outlet_sizing`, `Tlim_at` sets where `Tlim` applies, seen from
+the ground (not the heat pump): `:inlet` (ground inlet = heat-pump LFT, default, the most
+conservative), `:outlet` (ground outlet = heat-pump EFT) or `:mean` (mean fluid temperature).
 
 You can also call a level directly with pre-resampled loads. Use `alternative_sizing_L2`, `_L3` or
 `_L4` (and the `outlet_sizing_*` equivalents). The load-resampling helpers

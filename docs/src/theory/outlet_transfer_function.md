@@ -23,7 +23,7 @@ the explicit `PublishedANN` choice. The long-term half is the FLS g-function res
 resistance:
 
 ```math
-\bar g = \left(N_b\,g + R_b^\ast\right)\frac{V\,C_f}{H}
+\bar g = \left(g + R_b^\ast\right)\frac{V\,C_f}{H}
 ```
 
 The two halves are spliced at the 21-day contact time (`DeepANN`'s validity horizon). The ANN
@@ -46,6 +46,12 @@ The full L4 profile is solved in the spectral domain without load aggregation.
 
 The transfer function is per borehole (field-average) and ``V`` is per borehole, so the
 borehole-count factor cancels. Total ground loads ``Q`` are used with ``Q/(N_b V C_f)``.
+
+For each operating limit, the length is the one for which the extremum of the fluid temperature
+at the location chosen by the `Tlim_at` keyword reaches ``T_\text{lim}``. The location is seen from
+the **ground**, not the heat pump: the ground inlet (`:inlet`, the heat-pump LFT, default and the
+most conservative), the ground outlet ``T_\text{out}`` (`:outlet`, the heat-pump EFT, as in Dion &
+Pasquier 2025) or the mean fluid temperature (`:mean`).
 
 ## Validity range
 
