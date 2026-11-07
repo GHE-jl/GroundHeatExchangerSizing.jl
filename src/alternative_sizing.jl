@@ -58,6 +58,7 @@ function alternative_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:
     cf::Real, ρf::Real, μf::Real, V::Real, T0::Real, Tlim::AbstractVector{<:Real};
     tp::Real = 6.0, ny::Real = 10.0, Tlim_at::Symbol = :inlet)
     # Basic inputs
+    _check_flow_rate(V)
     nb = size(xy, 1)
     offset = _Tlim_offset(Q3[3, :], nb, V, ρf, cf, Tlim_at; loc = :mean) # peak offset [°C]
     ty = ny * 365 * 24 * 3600.0                                  # design period [s]
@@ -99,6 +100,7 @@ function _alternative_convolution(Qc::AbstractVector{<:Real}, Qh::AbstractVector
     Tlim::AbstractVector{<:Real}, ny::Real, Tlim_at::Symbol)
 
     # Basic inputs
+    _check_flow_rate(V)
     nb = size(xy, 1)
     nyi = Int(ny)
     t = collect(3600.0:3600.0:(3600.0 * 8760 * nyi))             # hourly time grid over ny years

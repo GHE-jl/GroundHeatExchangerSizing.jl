@@ -1,6 +1,6 @@
 name = "GroundHeatExchangerSizing"
 uuid = "c69f955c-e283-4c57-b28d-9686908aa4bd"
-version = "1.1.0"
+version = "1.1.1"
 authors = ["Gabriel-Dion <dion.gabriel100@gmail.com>"]
 
 [deps]

@@ -60,6 +60,23 @@ function _Tlim_offset(Q, nb, V, ρf, cf, Tlim_at::Symbol; loc::Symbol = :mean)
 end
 
 """
+    _check_flow_rate(V)
+
+Warn when the flow rate per borehole `V` [m³/s] is below 15 L/min. At low flow rates, the flow in
+the pipes can be laminar, which increases the effective borehole resistance, and the flow rate is
+outside the training range of `DeepANN` (15-35 L/min), where it is clamped.
+"""
+function _check_flow_rate(V)
+    V_L_min = V * 60_000
+    V_L_min < 15 && @warn "Flow rate per borehole V = $(round(V_L_min; digits = 2)) L/min is " *
+        "below 15 L/min: the flow can be laminar, and V is outside the DeepANN training range " *
+        "(15-35 L/min)."
+    V_L_min > 35 && @warn "Flow rate per borehole V = $(round(V_L_min; digits = 2)) L/min is " *
+        "above 35 L/min: it is outside the DeepANN training range (15-35 L/min)."
+    return nothing
+end
+
+"""
     Q_COP(Qb, COP_heating, COP_cooling)
 
 Convert building thermal load(s) to ground thermal load(s) using a heat-pump coefficient of

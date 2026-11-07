@@ -97,6 +97,8 @@ function outlet_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:Real}
     D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real, kg::Real, Cg::Real, kp::Real,
     Cp::Real, kf::Real, cf::Real, ρf::Real, μf::Real, V::Real, T0::Real,
     Tlim::AbstractVector{<:Real}; tp::Real = 6.0, ny::Real = 10.0, Tlim_at::Symbol = :inlet)
+    # Basic inputs
+    _check_flow_rate(V)
     nb = size(xy, 1)
     Cf = ρf * cf                                                 # fluid volumetric heat capacity
     ty = ny * 365 * 24 * 3600.0
@@ -139,6 +141,8 @@ function _outlet_convolution(Qc::AbstractVector{<:Real}, Qh::AbstractVector{<:Re
     xy::AbstractMatrix{<:Real}, rb::Real, D::Real, ks::Real, Cs::Real, s::Real, ro::Real, ri::Real,
     kg::Real, Cg::Real, kp::Real, Cp::Real, kf::Real, cf::Real, ρf::Real, μf::Real, V::Real,
     T0::Real, Tlim::AbstractVector{<:Real}, ny::Real, Tlim_at::Symbol)
+    # Basic inputs
+    _check_flow_rate(V)
     nb = size(xy, 1)
     Cf = ρf * cf
     nyi = Int(ny)

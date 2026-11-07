@@ -9,14 +9,23 @@ using GroundHeatExchangerSizing
 using BenchmarkTools
 using Logging
 
-# The short-term ANN warns on every evaluation for the test-case pipe/fluid properties that fall
-# outside its training ranges.
-disable_logging(Logging.Warn)
-
 include("Ahmadfard_cases.jl")
 
 levels = (:L2, :L3, :L4)
 cases = 1:4
+
+# Flow rates per borehole outside the DeepANN training range (15-35 L/min) are clamped by the
+# short-term ANN, so the outlet sizing of cases 2 (14.1 L/min) and 3 (39.5 L/min) differs from Dion
+# & Pasquier (2025).
+for c in cases
+    p = ahmadfard_cases(c)
+    V_L_min = p.V / p.nb * 60_000
+    15 <= V_L_min <= 35 || @warn "Case $c: V = $(round(V_L_min; digits = 2)) L/min per borehole " *
+        "is outside the DeepANN training range (15-35 L/min), it is clamped."
+end
+
+# The short-term ANN then warns on every evaluation for these cases, so the warnings are disabled.
+disable_logging(Logging.Warn)
 H_out = zeros(length(cases), length(levels))
 H_alt = zeros(length(cases), length(levels))
 
