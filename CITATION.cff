@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 type: software
 title: "GroundHeatExchangerSizing.jl"
-version: 1.1.1
-date-released: 2026-11-05
+version: 1.1.2
+date-released: 2026-11-12
 url: "https://github.com/GHE-jl/GroundHeatExchangerSizing.jl"
 repository-code: "https://github.com/GHE-jl/GroundHeatExchangerSizing.jl"
 license: AGPL-3.0

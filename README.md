@@ -78,7 +78,7 @@ and resamples it internally (`level = :L2 | :L3 | :L4`).
 | `outlet_sizing` | dispatcher | hourly | selects the level and resamples |
 
 The finite-line-source g-function is evaluated under the equal-mean-wall-temperature boundary
-condition (**BC-II**) by successive spatial superposition, on a `FLSModel`. The effective borehole
+condition (**BC-II**) by the time-marching spatial superposition of GroundResponse.jl (`bc_II`), on a `FLSModel`. The effective borehole
 thermal resistance `Rb*` is computed with the first-order multipole method and the
 axial short-circuit correction (`resistance_ULoop_effective`). It is recomputed at each candidate
 length.

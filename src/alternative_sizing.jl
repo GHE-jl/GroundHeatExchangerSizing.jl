@@ -72,7 +72,7 @@ function alternative_sizing_L2(Q3::AbstractMatrix{<:Real}, xy::AbstractMatrix{<:
         H = Hi[end]
 
         # Per-borehole field g-function [°Cm/W] and field ground resistance.
-        g = ground_response(tsup, rb, xy, FLSModel(H, D, ks, Cs); bc = :II, solver = :successive)
+        g = ground_response(tsup, rb, xy, FLSModel(H, D, ks, Cs); bc = :II)
         Rgh, Rgm, Rgy = g[1], g[2] - g[1], g[3] - g[2]           # effective ground resistances
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
 
@@ -116,7 +116,7 @@ function _alternative_convolution(Qc::AbstractVector{<:Real}, Qh::AbstractVector
         H = Hi[end]
 
         # Per-borehole field g-function [°Cm/W] → field effective ground resistance.
-        g = ground_response(t, rb, xy, FLSModel(H, D, ks, Cs); bc = :II, solver = :successive)
+        g = ground_response(t, rb, xy, FLSModel(H, D, ks, Cs); bc = :II)
         Rbe = resistance_ULoop_effective(V, H, s, rb, ro, ri, ks, kg, kp, kf, cf, ρf, μf)
 
         # Required borehole lengths for low and high limits based on convolution with the g-function
